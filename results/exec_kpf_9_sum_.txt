@@ -1,0 +1,8 @@
+File: ./Litlle_instance/kpf_9_sum.txt
+Number of Forfeit Pairs = 113
+Execution Costs: 3369 
+Execution Times: 0.004481 
+Average Cost: 3369.000000
+Average Elapsed Time: 0.004481 seconds
+Best Cost: 3369.000000
+Time: 0.004481
