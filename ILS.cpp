@@ -50,7 +50,7 @@ double cauchy_flight_step(int iter, int max_iter) {
   return cauchy_pdf(x, 0, scale);
 }
 
-typedef enum choice{
+enum choice{
   add,
   rem
 };
@@ -73,7 +73,7 @@ void perturbate(
   // double best_cost,
   string flight_step
 ) {
-
+  // cout << "Entrou Pertubate\n";
   double flight_step_value;
   if(flight_step == "cauchy"){
     flight_step_value = abs(cauchy_flight_step(iter, max_iter));
@@ -100,6 +100,8 @@ void perturbate(
       }
       if(can_add.size() > 0){
         int id = get_random(0, can_add.size()-1);
+        id = can_add[id];
+        assert(solution.can_add(id));
         solution.add_itemO(id); //adicionar em O(1) ou O(n)?
       }
     }else if(type == rem){
@@ -111,10 +113,12 @@ void perturbate(
       }
       if(can_rem.size() > 0){
         int id = get_random(0, can_rem.size()-1);
+        id = can_rem[id];
         solution.remove_itemO(id); //remover em O(1) ou O(n)?
       }
     }
   }
+  // cout << "Saiu Pertubate\n";
 }
 
 /*
@@ -127,20 +131,25 @@ saída:
 tempo: O(#total de iterações) * O(perturbate)
 */
 int ILS::solve(ProblemInstance* _p, Solution &solution){
+  // cout << "Entrou ILS\n";
+
   Solution best_sol(_p); 
 
   LocalSearch localsearch(p); 
   localsearch.solve(p, solution);
   
-  int best_cost = solution.getCost(); 
-  int current_cost = best_cost; 
+  int best_cost = solution.getCost();
+  cout << "SOLUCAO QUE CHEGOU " << solution.getCost() << "\n";
+  int current_cost = best_cost;
   best_sol = solution; 
 
   int iter = 0;
   while(iter < iter_wo_impr){
     iter++; 
 
-    string flight_step = "hybrid_cauchy"; 
+    // cout << iter << ": " << solution.getCost() << " " << solution.num_items_in_sol << "\n";
+
+    string flight_step = "cauchy"; 
     perturbate(solution, _p, iter, iter_wo_impr, flight_step); //:)
     
     localsearch.solve(_p, solution);
@@ -154,5 +163,6 @@ int ILS::solve(ProblemInstance* _p, Solution &solution){
   }
 
   solution = best_sol;
+  assert(best_cost == best_sol.getCost());
 	return best_cost;
 }

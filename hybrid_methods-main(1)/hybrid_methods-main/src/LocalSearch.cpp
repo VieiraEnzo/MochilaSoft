@@ -11,7 +11,7 @@ LocalSearch::~LocalSearch()
 }
 
 int LocalSearch::calculate_delta(int i, int j, vector<int> alpha_list, ProblemInstance* _p){
-    return alpha_list[j] - alpha_list[i] + _p->mD[i][j]; 
+    return alpha_list[j] - alpha_list[i] + _p->mD[i][j];
 }
 
 vector<int> LocalSearch::generate_alpha_list(ProblemInstance* _p, Solution &solution) {

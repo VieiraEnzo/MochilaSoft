@@ -3,6 +3,7 @@
 #include "Solution.h"
 #include "Constructive.h"
 #include "ConstructiveCG.h"
+#include "ILS.h"
 // #include "Model.h"
 // #include "Mining.h"
 // #include "Pattern.h"
@@ -46,23 +47,15 @@ std::vector<double> process_file(const string &file_path)
     double pct_rm = 0.05;
     constructive.Carousel_Forfeits(p, solution, max_iter, pct_rm);
 
-    double best_cost = solution.getCost();
+    int iter_wo_impr = 1000;
+    ILS ils(p, iter_wo_impr);
+    auto best_cost = ils.solve(p, solution);    
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> time_taken = end - start;
-
-    cout << "tamanho :" <<  solution.getKS().size() << "\n";
-
-    vector<int> prin = solution.getKS();
-    sort(prin.begin(), prin.end());
-
-    for(auto i : prin){
-        cout << i << " ";
-    }cout << "\n";
-
     
     delete p;
-	return {best_cost, time_taken.count()};
+	return {(double) best_cost.first, time_taken.count()};
 }
 
 float average(std::vector<float> const& v){

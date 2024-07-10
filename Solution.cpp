@@ -103,6 +103,8 @@ saida: -
 tempo: O(n)
 */
 void::Solution::add_itemO(int i){
+	// add_item(i);
+	assert(inside[i] == 0);
 	dq.push_back(i);
 	hash += ItemHash[i];
 	used_capacity += p->weights[i];
@@ -183,7 +185,7 @@ saida: -
 tempo: O(1)
 */
 void Solution::remove_item(int i){
-
+	
 	hash -= ItemHash[i];
 	used_capacity -= p->weights[i];
 	inside[i] = 0;
@@ -199,6 +201,7 @@ saida: -
 tempo: O(n)
 */
 void Solution::remove_itemO(int i){
+
 
 	hash -= ItemHash[i];
 	used_capacity -= p->weights[i];
@@ -233,19 +236,6 @@ bool operator< (Solution &a, Solution &b){
 	if(a.getCost()-b.getCost()<1E-5 || b.getCost()-a.getCost()>-1E-5)return false;
 	return a.getCost() < b.getCost();
 }
-
-/*
-Compara duas soluçãoes
-entrada: solução 'a' e solução 'b´
-saida: booleano dizendo se é maior
-tempo: O(n^2)
-*/
-bool operator> (Solution &a, Solution &b){
-	
-	return a.getCost() > b.getCost();
-
-}
-
 
 /*
 Retorna vetor de booleano dos itens na solução

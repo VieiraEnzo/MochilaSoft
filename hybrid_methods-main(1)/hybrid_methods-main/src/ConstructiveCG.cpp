@@ -105,7 +105,7 @@ void ConstructiveCG::Carousel_Forfeits(ProblemInstance* _p, Solution &solution, 
     int num_items_removed = solution.getKS().size() * pct_rm;
 
     for(int i = 0; i < num_items_removed; i++){
-	    cout << "Removeu ultimo " << solution.getKS().back() << "\n";
+	    // cout << "Removeu ultimo " << solution.getKS().back() << "\n";
         solution.getKS().pop_back();    
     }
 

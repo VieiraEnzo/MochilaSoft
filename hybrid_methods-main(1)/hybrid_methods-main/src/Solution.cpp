@@ -48,12 +48,12 @@ void Solution::add_item(int i){
 
 	used_capacity+= p->weights[i];
 
-	cout << "Adicionou " << i << "\n";
+	// cout << "Adicionou " << i << "\n";
 
 }
 
 void::Solution::remove_oldest_choice(){
-	cout << "Removeu da frente " << *Sack.begin() << "\n";
+	// cout << "Removeu da frente " << *Sack.begin() << "\n";
 	Sack.erase(Sack.begin());
 }
 
@@ -94,7 +94,7 @@ void Solution::remove_item(int i){
 
     used_capacity-= p->weights[i];
 
-	cout << "Removeu do meio" << i << "\n";
+	// cout << "Removeu do meio" << i << "\n";
 }
 
 

@@ -8,63 +8,68 @@ LocalSearch::LocalSearch(ProblemInstance* _p)
 	p = _p;
 }
 
-LocalSearch::~LocalSearch()
-{
+LocalSearch::~LocalSearch() {}
+
+
+int LocalSearch::calculate_delta(int i, int j, vector<int> alpha_list, ProblemInstance* _p){
+    return alpha_list[j] - alpha_list[i] + _p->mD[i][j];
+}
+
+void LocalSearch::generate_alpha_list(ProblemInstance* _p, Solution &solution, vector<int> &alpha_list) {
+
+    for (int i = 0; i < p->num_items; i++){
+        alpha_list[i] += p->profits[i];
+        for(int j = 0; j < p->num_items; j++){
+            if(solution.is_in_sack(j)) alpha_list[i] -= p->mD[i][j];
+        }
+    }
 
 }
 
 
-Solution LocalSearch::solve(ProblemInstance* _p, Solution &solution)
+
+void LocalSearch::solve(ProblemInstance* _p, Solution &solution)
 {	
+    // cout << "Entrou Local \n";
+    int best_delta = 0; bool Improved = true;
 
-	bool Improved = true;
-    int best_delta = INT_MIN, delta = INT_MIN; 
+    // int iter = 0;
+	while(Improved){    
 
-    list<int> sack;     //Testar set tbm
-    list<int> not_sack; //Testar set tbm
+        // cout << iter++ << ": " << solution.getCost() << " " << solution.num_items_in_sol << "\n";
 
-    for(int i = 0; i < p->num_items; i++){
-        if(solution.is_in_sack(i)) sack.push_back(i);
-        else not_sack.push_back(i);
-    }
+        vector<int> sack;     //Testar set tbm
+        vector<int> not_sack; //Testar set tbm
+        int in_item = -1, out_item = -1;
 
+        for(int i = 0; i < p->num_items; i++){
+            if(solution.is_in_sack(i)) sack.push_back(i);
+            else not_sack.push_back(i);
+        }
 
-	while(Improved){
-        
-        int cost_before = solution.getCost();
-        auto itIN = sack.end();
-        auto itOUT = not_sack.end();
+        Improved = false;
+        vector<int> alpha_lista(p-> num_items);
+        generate_alpha_list(p, solution, alpha_lista);
 
-        for(auto itSack = sack.begin(); itSack != sack.end(); itSack++){
-            int i = *itSack;
-            solution.remove_itemO(i);
-            for(auto itNotSack = sack.begin(); itNotSack != sack.end(); itNotSack++){
-                int j = *itNotSack;
-                solution.add_itemO(j);
-                int cost_after = solution.getCost();
-                int delta = cost_before - cost_after;
-                if(delta > best_delta && delta > 0 && solution.can_add(j)){
+        for(auto i : sack){
+            for(auto j : not_sack){
+                if( -p->weights[i]  +  p->weights[j] + solution.used_capacity > p->budget) continue;
+                int delta = calculate_delta(i,j, alpha_lista, p);
+                if(delta > best_delta && delta > 0){
                     Improved = true;
                     best_delta = delta;
-                    itOUT = itSack;
-                    itIN = itNotSack;
+                    out_item = i;
+                    in_item = j;
                 }
-                solution.remove_itemO(j);
             }
-            solution.add_itemO(i);
         }
 
 		if(Improved){
-            assert(best_delta != INT_MIN);
-			swap(solution,*itOUT,*itIN);
-            sack.erase(itOUT);
-            sack.push_back(*itIN);
-            not_sack.erase(itIN);
-            not_sack.push_back(*itOUT);
+            assert(best_delta > 0);
+			swap(solution,out_item, in_item);
 		}
 	}
 
-	return solution;
 }
 
 void LocalSearch::swap(Solution &solution, int out_item, int in_item){

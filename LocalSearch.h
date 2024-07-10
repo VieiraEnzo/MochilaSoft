@@ -24,7 +24,7 @@ public:
 
 	virtual ~LocalSearch();
 
-	Solution solve(ProblemInstance* _p, Solution &solution);
+	void solve(ProblemInstance* _p, Solution &solution);
 	// usar reserved no alpha list
     void generate_alpha_list(ProblemInstance* _p, Solution &solution, vector<int> &alpha_list); 
     int calculate_delta(int i, int j, vector<int> alpha_list, ProblemInstance* _p); 

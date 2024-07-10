@@ -71,7 +71,7 @@ void ConstructiveCG::Carousel_Forfeits(ProblemInstance* _p, Solution &solution,
 
   int removals = solution.get_size() * pct_rm;
   for(int i = 0; i < removals; i++){ 
-    int rem = solution.remove_newest_choice();    
+    solution.remove_newest_choice();    
   }
 
   for(int i = 0; i < n; i++){

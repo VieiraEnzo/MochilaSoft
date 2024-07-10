@@ -1,7 +1,7 @@
-File: ../../../Litlle_instance/kpf_9_sum.txt
-Execution Costs: 3369 
-Execution Times: 0.273983 
-Average Cost: 3369.000000
-Average Elapsed Time: 0.273983 seconds
-Best Cost: 3369.000000
-Time: 0.273983
+File: ../../../sum_instances/O/1000/kpf_9_sum.txt
+Execution Costs: 5024 
+Execution Times: 30.877304 
+Average Cost: 5024.000000
+Average Elapsed Time: 30.877304 seconds
+Best Cost: 5024.000000
+Time: 30.877304

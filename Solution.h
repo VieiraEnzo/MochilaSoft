@@ -57,18 +57,19 @@ public:
 	int CountForfeit();
 
 
-	Solution& operator= (const Solution& other){
-		CostCalculated = other.CostCalculated;
-		num_items_in_sol = other.num_items_in_sol;
-		cost = other.cost;
-		used_capacity = other.used_capacity;
-		hash = other.hash;
-		p = other.p;
-		inside = other.inside;
-		freq = other.freq;
-		dq = other.dq;
-		ItemHash = other.ItemHash;
-	}	 
+	// Solution operator= (const Solution& other){
+	// 	CostCalculated = other.CostCalculated;
+	// 	num_items_in_sol = other.num_items_in_sol;
+	// 	cost = other.cost;
+	// 	used_capacity = other.used_capacity;
+	// 	hash = other.hash;
+	// 	p = other.p;
+	// 	inside = other.inside;
+	// 	freq = other.freq;
+	// 	dq = other.dq;
+	// 	ItemHash = other.ItemHash;
+	// 	return *this;
+	// }	 
 };
 
 #endif // SOLUTION_H
