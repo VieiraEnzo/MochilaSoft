@@ -1,8 +1,8 @@
 File: sum_instances/O/1000/kpf_4_sum.txt
-Number of Forfeit Pairs = 118
-Execution Costs: 5044 
-Execution Times: 31.881603 
-Average Cost: 5044.000000
-Average Elapsed Time: 31.881603 seconds
-Best Cost: 5044.000000
-Time: 31.881603
+Number of Forfeit Pairs = 129
+Execution Costs: 5019 
+Execution Times: 3.417097 
+Average Cost: 5019.000000
+Average Elapsed Time: 3.417097 seconds
+Best Cost: 5019.000000
+Time: 3.417097

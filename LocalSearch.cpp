@@ -11,7 +11,7 @@ LocalSearch::LocalSearch(ProblemInstance* _p)
 LocalSearch::~LocalSearch() {}
 
 
-int LocalSearch::calculate_delta(int i, int j, vector<int> alpha_list, ProblemInstance* _p){
+int LocalSearch::calculate_delta(int i, int j, vector<int> &alpha_list, ProblemInstance* _p){
     return alpha_list[j] - alpha_list[i] + _p->mD[i][j];
 }
 
@@ -32,6 +32,8 @@ void LocalSearch::solve(ProblemInstance* _p, Solution &solution)
 {	
     // cout << "Entrou Local \n";
     int best_delta = 0; bool Improved = true;
+    vector<int> alpha_lista(p-> num_items);
+    generate_alpha_list(p, solution, alpha_lista);
 
     // int iter = 0;
 	while(Improved){    
@@ -48,8 +50,7 @@ void LocalSearch::solve(ProblemInstance* _p, Solution &solution)
         }
 
         Improved = false;
-        vector<int> alpha_lista(p-> num_items);
-        generate_alpha_list(p, solution, alpha_lista);
+
 
         for(auto i : sack){
             for(auto j : not_sack){
@@ -64,10 +65,14 @@ void LocalSearch::solve(ProblemInstance* _p, Solution &solution)
             }
         }
 
-		if(Improved){
-            assert(best_delta > 0);
+		if(Improved){		
 			swap(solution,out_item, in_item);
+            for(int i = 0; i < p->num_items; i++){
+                alpha_lista[i] += p->mD[i][out_item];
+                alpha_lista[i] -= p->mD[i][in_item];
+            }
 		}
+
 	}
 
 }

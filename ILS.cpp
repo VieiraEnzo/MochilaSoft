@@ -71,7 +71,7 @@ void perturbate(
   int max_iter,
   // double current_cost,
   // double best_cost,
-  string flight_step
+  string &flight_step
 ) {
   // cout << "Entrou Pertubate\n";
   double flight_step_value;
@@ -121,6 +121,7 @@ void perturbate(
   // cout << "Saiu Pertubate\n";
 }
 
+
 /*
 faz a iterated local search em uma solução parcial gerada pelo construtivo
 entrada:
@@ -139,20 +140,31 @@ int ILS::solve(ProblemInstance* _p, Solution &solution){
   localsearch.solve(p, solution);
   
   int best_cost = solution.getCost();
-  cout << "SOLUCAO QUE CHEGOU " << solution.getCost() << "\n";
+  // cout << "SOLUCAO QUE CHEGOU " << solution.getCost() << "\n";
   int current_cost = best_cost;
   best_sol = solution; 
 
+  int itTotal = 0;
   int iter = 0;
   while(iter < iter_wo_impr){
-    iter++; 
+    iter++; itTotal++;
 
     // cout << iter << ": " << solution.getCost() << " " << solution.num_items_in_sol << "\n";
 
     string flight_step = "cauchy"; 
-    perturbate(solution, _p, iter, iter_wo_impr, flight_step); //:)
+    // auto start = std::chrono::high_resolution_clock::now();
+    perturbate(solution, _p, iter, iter_wo_impr, flight_step); 
+    // auto end = std::chrono::high_resolution_clock::now();
+    // std::chrono::duration<double> time_taken = end - start;
+
+    // cout << "Tempo para drodar o pertubate: "  << time_taken.count() << "\n"; 
     
+    // start = std::chrono::high_resolution_clock::now();
     localsearch.solve(_p, solution);
+    // end = std::chrono::high_resolution_clock::now();
+    // time_taken = end - start;
+    // cout << "Tempo para drodar o localsearch: "  << time_taken.count() << "\n"; 
+
     current_cost = solution.getCost();
 
     if(current_cost > best_cost){
@@ -161,6 +173,8 @@ int ILS::solve(ProblemInstance* _p, Solution &solution){
       iter = 0; 
     }
   }
+
+  cout << "Foram utilizadas " << itTotal << " iterações\n";
 
   solution = best_sol;
   assert(best_cost == best_sol.getCost());
