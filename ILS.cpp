@@ -73,7 +73,6 @@ void perturbate(
   // double best_cost,
   string &flight_step
 ) {
-  // cout << "Entrou Pertubate\n";
   double flight_step_value;
   if(flight_step == "cauchy"){
     flight_step_value = abs(cauchy_flight_step(iter, max_iter));
@@ -118,9 +117,7 @@ void perturbate(
       }
     }
   }
-  // cout << "Saiu Pertubate\n";
 }
-
 
 /*
 faz a iterated local search em uma solução parcial gerada pelo construtivo
@@ -132,40 +129,65 @@ saída:
 tempo: O(#total de iterações) * O(perturbate)
 */
 int ILS::solve(ProblemInstance* _p, Solution &solution){
-  // cout << "Entrou ILS\n";
-
   Solution best_sol(_p); 
 
   LocalSearch localsearch(p); 
   localsearch.solve(p, solution);
   
   int best_cost = solution.getCost();
-  // cout << "SOLUCAO QUE CHEGOU " << solution.getCost() << "\n";
+
   int current_cost = best_cost;
   best_sol = solution; 
 
-  int itTotal = 0;
+  ES *EliteSet = new ES(15);
+  int no_change = 0;
   int iter = 0;
   while(iter < iter_wo_impr){
-    iter++; itTotal++;
-
-    // cout << iter << ": " << solution.getCost() << " " << solution.num_items_in_sol << "\n";
-
+    iter++;
     string flight_step = "cauchy"; 
-    // auto start = std::chrono::high_resolution_clock::now();
     perturbate(solution, _p, iter, iter_wo_impr, flight_step); 
-    // auto end = std::chrono::high_resolution_clock::now();
-    // std::chrono::duration<double> time_taken = end - start;
-
-    // cout << "Tempo para drodar o pertubate: "  << time_taken.count() << "\n"; 
-    
-    // start = std::chrono::high_resolution_clock::now();
     localsearch.solve(_p, solution);
-    // end = std::chrono::high_resolution_clock::now();
-    // time_taken = end - start;
-    // cout << "Tempo para drodar o localsearch: "  << time_taken.count() << "\n"; 
 
     current_cost = solution.getCost();
+    no_change += 1;
+    if(EliteSet->add(solution)){
+      no_change = 0;
+    }
+
+    assert(no_change <= 10);
+    if(no_change == 10){
+      no_change = 0;
+
+      int suporte = 2;
+      Mining miner(*EliteSet, suporte, 15);
+      miner.map_file();
+      miner.mine();
+      miner.unmapall_file();
+
+      Pattern **Mined_Patterns = miner.getlistOfPatterns();
+      int pattern_size = miner.getSizePatterns();
+      vector <vector<int>> pattern_matrix(_p->num_items, vector<int>(pattern_size));
+      for(int i = 0; i < pattern_size; i++){
+        Pattern *Mined_Items = Mined_Patterns[i];
+        for(Pattern tmp : Mined_Items->elements){
+          pattern_matrix[i][tmp] = 1;
+        }
+      }
+
+      vector <int> elements;
+      int num = 0;
+      for(bool tmp : best_sol.inside){
+        if(tmp == 1){
+          elements.push_back(num);
+        }
+        num += 1;
+      }
+
+      Model kpf_model(_p);
+      auto model_result = kpf_model.Build_Model_With_Patterns(_p, pattern_size, pattern_matrix, elements);
+      solution = model_result.first;
+      current_cost = model_result.second;
+    }
 
     if(current_cost > best_cost){
       best_sol = solution; 
@@ -173,8 +195,6 @@ int ILS::solve(ProblemInstance* _p, Solution &solution){
       iter = 0; 
     }
   }
-
-  cout << "Foram utilizadas " << itTotal << " iterações\n";
 
   solution = best_sol;
   assert(best_cost == best_sol.getCost());

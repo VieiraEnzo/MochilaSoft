@@ -1,0 +1,475 @@
+#ifndef MODEL_CPP_
+#define MODEL_CPP_
+
+#include "Model.h"
+
+// cmd: g++ Model.cpp -o model_test -I/opt/ibm/ILOG/CPLEX_Studio2211/cplex/include -I/opt/ibm/ILOG/CPLEX_Studio2211/concert/include -L/opt/ibm/ILOG/CPLEX_Studio2211/cplex/lib/x86-64_linux/static_pic_linux/static_pic
+
+Model::Model(ProblemInstance* _p){
+    p = _p;
+}
+Model::~Model(){ 
+    env.end();
+}
+
+vector<int> convertToBinaryVector(vector<int> &solution, ProblemInstance* _p) {
+    vector<int> binaryVec(_p->num_items, 0); 
+
+    for (int item: solution) {
+        if (item >= 0 && item < _p->num_items) {
+            binaryVec[item] = 1; 
+        }
+    }
+
+    return binaryVec;
+}
+
+
+void Model::setMIPstart(vector<int> &solution, IloCplex &cplex, IloNumVarArray &x, ProblemInstance* _p) {  	
+    int solvalx[_p->num_items]; 
+
+    vector<int> bin_solution = convertToBinaryVector(solution, _p); 
+
+    for (int i=0;i<_p->num_items;++i){ 		 		
+        solvalx[i] = bin_solution[i]; 	
+    }  
+
+    IloNumVarArray startVar(env); 	
+    IloNumArray startVal(env);  	
+    for (int i=0;i<_p->num_items;++i) 	{ 		
+        startVar.add(x[i]); 		
+        startVal.add(solvalx[i]); 	
+    } 
+    cplex.addMIPStart(startVar, startVal);
+    startVal.end();
+    startVar.end();
+}
+
+void Model::addObjective(IloEnv &env, IloModel &model, IloNumVarArray &x, IloNumVarArray &v, ProblemInstance* _p){
+    IloExpr summation(env);
+    for(int i=0;i<_p->num_items;++i){
+        summation += _p->profits[i]*x[i];
+    }
+
+    for(int k=0;k<_p->num_forfeits_pairs;++k){
+        summation -= _p->forfeits_costs[k]*v[k];
+    }
+
+    model.add(IloMaximize(env,summation));
+}
+
+
+void Model::addConstraintTotalCapacity(IloEnv &env,IloModel &model,IloNumVarArray &x, ProblemInstance* _p){
+    IloExpr summation(env);
+    for(int i= 0; i<_p->num_items;++i){
+        summation += x[i]*_p->weights[i];       
+    }
+    IloRange total_capacity(env, -IloInfinity, summation, _p->budget); 
+    stringstream name;
+    name << "Capacity: ";
+    total_capacity.setName(name.str().c_str());
+    model.add(total_capacity); 
+}
+
+void Model::addConstraintLinearization(IloEnv &env,IloModel &model, IloNumVarArray &x, IloNumVarArray &v, ProblemInstance* _p){
+    int idx_pair = 0;
+    for (const auto& pair : _p->forfeits_pairs) {
+        model.add(IloRange(env, -IloInfinity, x[pair.first] + x[pair.second] - v[idx_pair], 1, "linearizationConstraint")); 
+        idx_pair = idx_pair + 1;   
+    }
+    
+}
+
+void Model::addConstraintofChoosePattern(IloEnv &env, IloModel &model, IloNumVarArray &z, int num_patterns){
+    IloExpr summation(env);
+    for(int p= 0; p<num_patterns;++p){
+        summation += z[p];       
+    }
+    IloRange choosepattern(env, 1, summation, IloInfinity);
+    stringstream name;
+    name << "ChoosePattern: ";
+    choosepattern.setName(name.str().c_str());
+    model.add(choosepattern); 
+} 
+
+
+void Model::addConstraintofFixPattern(IloEnv &env, IloModel &model, IloNumVarArray &x, IloNumVarArray &z, const std::vector<std::vector<int>>& pattern_matrix, int num_patterns, ProblemInstance* _p){
+    for(int p= 0; p<num_patterns;++p){
+        for (int i=0; i < _p->num_items; i++){
+            model.add(IloRange(env, 0, x[i] - pattern_matrix[i][p]*z[p], IloInfinity, "fixPatternsConstraint"));   
+        }
+    }
+    
+    // IloExpr summation(env);
+    // for(int p= 0; p<num_patterns;++p){
+    //     for (int i=0; i < _p->num_items; i++){
+    //         summation += x[i] - pattern_matrix[i][p]*z[p];       
+    //     }
+    // }
+    
+    // IloRange fixpattern(env, 0, summation, IloInfinity);
+    // stringstream name;
+    // name << "Fix Pattern: ";
+    // fixpattern.setName(name.str().c_str());
+    // model.add(fixpattern); 
+}
+
+void Model::addConstraintLocalBranching(IloEnv &env,IloModel &model,IloNumVarArray &x, std::vector<int> &solution, ProblemInstance* _p){
+    double delta = 0.5 * _p->num_items;
+    IloExpr summation(env);
+
+    vector<int> bin_solution = convertToBinaryVector(solution, _p); 
+
+    for(int i=0;i<_p->num_items;++i){
+        if (bin_solution[i] == 1){
+            summation += (1 - x[i]);
+        }else{
+            summation += x[i];
+        }
+    }
+    
+    //LB FAB
+    summation -= delta; 
+    IloRange constr_localbranch(env, -IloInfinity, summation, 0);
+    stringstream lbfab;
+    lbfab << "constr_localbranching";
+    constr_localbranch.setName(lbfab.str().c_str());
+    model.add(constr_localbranch);    
+}
+
+std::pair<Solution, double> Model::Build_Model_with_Patterns(ProblemInstance* _p, int num_patterns, const std::vector<std::vector<int>>& pattern_matrix, vector<int> best_solution){
+    env = IloEnv();
+    Solution kp_solution(_p); 
+
+    try{
+    
+        model = IloModel(env);
+        
+        // Declaring Variables
+        x = IloNumVarArray(env, _p->num_items, 0, 1, IloNumVar::Bool); 
+        
+        for (int i = 0; i < p->num_items ; ++i){
+            stringstream varx;
+            varx << "x" << i;
+            x[i].setName(varx.str().c_str());
+            model.add(x[i]);
+        }
+
+
+        v = IloNumVarArray(env, _p->num_forfeits_pairs, 0.0, 1.0, IloNumVar::Float);
+
+        for (int k = 0; k < p->num_forfeits_pairs ; ++k){
+            stringstream varv;
+            varv << "v" << k;
+            v[k].setName(varv.str().c_str());
+            model.add(v[k]);
+        }
+
+        z = IloNumVarArray(env, num_patterns, 0, 1, IloNumVar::Bool); 
+
+        
+        for (int p = 0; p < num_patterns; ++p){
+            stringstream varz;
+            varz << "z" << p;
+            z[p].setName(varz.str().c_str());
+            model.add(z[p]);
+        }
+
+        //Add Constraints    
+        addConstraintTotalCapacity(env, model, x, _p); 
+        addConstraintLinearization(env, model, x, v, _p); 
+        addConstraintofChoosePattern(env, model, z, num_patterns); 
+        addConstraintofFixPattern(env, model, x, z, pattern_matrix, num_patterns, _p); 
+        addObjective(env,model,x,v,_p);
+
+        
+
+    	ofstream outfile;
+	    // cout << "---------------------instance_name:" << _p->i_name << endl; 
+        string log_filename = "./output_cplex/relatorio_"+_p->i_name+"_.txt"; 
+        outfile.open(log_filename, std::ios_base::app);
+        
+
+        knapsack = IloCplex(model);
+        // int timelimit = 30;  
+        // knapsack.setParam(IloCplex::Param::TimeLimit,timelimit);
+        knapsack.setOut(outfile);
+        setMIPstart(best_solution, knapsack, x, _p); 
+
+        // knapsack.exportModel("KPFModel.lp");
+        // cplex.extract(model); 
+		time(&start);
+        knapsack.solve();
+		time(&end);
+        double total_time = double(end - start); 
+
+        // cout << "number of patterns: " << num_patterns << endl; 
+        // std::cout << "Values of z:" << std::endl;
+        // for (int p = 0; p < num_patterns; ++p) {
+        //     std::cout << "z[" << p << "]: " << knapsack.getValue(z[p]) << std::endl;
+        // }
+
+        if(getStatus()==0){
+		    outfile<<"Optimum Found"<<endl;
+            outfile<<"Value: "<<knapsack.getObjValue()<<endl;
+            outfile<<"Exact Solution: "; 
+            for(int i = 0; i < _p->num_items; i++){
+                if(knapsack.getValue(x[i]) > 0){
+                    outfile<<i<<" ";
+                    kp_solution.add_item(i); 
+                }
+            }
+            outfile << endl; 
+            outfile<<"GAP: "<<knapsack.getMIPRelativeGap()<<endl;
+            outfile << "Model Solve Total Time: " << total_time << endl; 
+        }else if(getStatus() == 1){
+            outfile<<"Solution Found"<<endl;
+            outfile<<"Value: "<<knapsack.getObjValue()<<endl;
+            outfile<<"Exact Solution: "; 
+            for(int i = 0; i < _p->num_items; i++){
+                if(knapsack.getValue(x[i]) > 0){
+                    outfile<<i<<" ";
+                }
+            }
+            outfile << endl; 
+            outfile<<"GAP: "<<knapsack.getMIPRelativeGap()<<endl;
+            outfile << "Model Solve Total Time: " << total_time << endl; 
+        }else if(getStatus() == 2){
+            outfile<< "Infeasible"<< endl;
+            outfile << "Model Solve Total Time: " << total_time << endl; 
+        }else{
+            outfile<<"Unknown"<<endl;
+            outfile << "Model Solve Total Time: " << total_time << endl; 
+        }
+        outfile << "---------------------\n\n";
+        // cout<<"Model Solution Cost: "<<knapsack.getObjValue()<<endl;
+        outfile.close(); 
+    }
+    catch (IloException& e) {
+        cerr << "Concert exception caught: " << e << endl;
+    }
+    catch (...) {
+        cerr << "Unknown exception caught" << endl;
+    }
+    
+	return make_pair(kp_solution, knapsack.getObjValue());
+
+    //cout << " Max =" << cplex.getObjValue() << endl ; 
+}
+
+std::pair<Solution, double> Model::Build_Model_with_LB(ProblemInstance* _p, vector<int> best_solution){
+    env = IloEnv();
+    Solution kp_solution(_p); 
+
+    try{
+    
+        model = IloModel(env);
+        
+        // Declaring Variables
+        x = IloNumVarArray(env, _p->num_items, 0, 1, IloNumVar::Bool); 
+        
+        for (int i = 0; i < p->num_items ; ++i){
+            stringstream varx;
+            varx << "x" << i;
+            x[i].setName(varx.str().c_str());
+            model.add(x[i]);
+        }
+
+
+        v = IloNumVarArray(env, _p->num_forfeits_pairs, 0.0, 1.0, IloNumVar::Float);
+
+        for (int k = 0; k < p->num_forfeits_pairs ; ++k){
+            stringstream varv;
+            varv << "v" << k;
+            v[k].setName(varv.str().c_str());
+            model.add(v[k]);
+        }
+
+
+        //Add Constraints    
+        addConstraintTotalCapacity(env, model, x, _p); 
+        addConstraintLinearization(env, model, x, v, _p); 
+        addConstraintLocalBranching(env,model, x, best_solution, _p);
+        addObjective(env,model,x,v,_p);
+        
+
+    	ofstream outfile;
+	    // cout << "---------------------instance_name:" << _p->i_name << endl; 
+        string log_filename = "./output_cplex/local_branching/relatorio_"+_p->i_name+"_.txt"; 
+        outfile.open(log_filename, std::ios_base::app);
+        
+
+        knapsack = IloCplex(model);
+//      int timelimit = 180;
+//      knapsack.setParam(IloCplex::Param::TimeLimit,timelimit);
+
+        // Set the memory emphasis parameter to true to reduce memory usage
+        knapsack.setParam(IloCplex::Param::Emphasis::Memory, IloTrue);
+        knapsack.setOut(outfile);
+        setMIPstart(best_solution, knapsack, x, _p); 
+
+        // knapsack.exportModel("KPFModel.lp");
+        // cplex.extract(model); 
+		time(&start);
+        knapsack.solve();
+		time(&end);
+        double total_time = double(end - start); 
+
+        // cout << "number of patterns: " << num_patterns << endl; 
+        // std::cout << "Values of z:" << std::endl;
+        // for (int p = 0; p < num_patterns; ++p) {
+        //     std::cout << "z[" << p << "]: " << knapsack.getValue(z[p]) << std::endl;
+        // }
+
+        if(getStatus()==0){
+		    outfile<<"Optimum Found"<<endl;
+            outfile<<"Value: "<<knapsack.getObjValue()<<endl;
+            outfile<<"Exact Solution: "; 
+            for(int i = 0; i < _p->num_items; i++){
+                if(knapsack.getValue(x[i]) > 0){
+                    outfile<<i<<" ";
+                    kp_solution.add_item(i); 
+                }
+            }
+            outfile << endl; 
+            outfile<<"GAP: "<<knapsack.getMIPRelativeGap()<<endl;
+            outfile << "Model Solve Total Time: " << total_time << endl; 
+        }else if(getStatus() == 1){
+            outfile<<"Solution Found"<<endl;
+            outfile<<"Value: "<<knapsack.getObjValue()<<endl;
+            outfile<<"Exact Solution: "; 
+            for(int i = 0; i < _p->num_items; i++){
+                if(knapsack.getValue(x[i]) > 0){
+                    outfile<<i<<" ";
+                }
+            }
+            outfile << endl; 
+            outfile<<"GAP: "<<knapsack.getMIPRelativeGap()<<endl;
+            outfile << "Model Solve Total Time: " << total_time << endl; 
+        }else if(getStatus() == 2){
+            outfile<< "Infeasible"<< endl;
+            outfile << "Model Solve Total Time: " << total_time << endl; 
+        }else{
+            outfile<<"Unknown"<<endl;
+            outfile << "Model Solve Total Time: " << total_time << endl; 
+        }
+        outfile << "---------------------\n\n";
+        // cout<<"Model Solution Cost: "<<knapsack.getObjValue()<<endl;
+        outfile.close(); 
+    }
+    catch (IloException& e) {
+        cerr << "Concert exception caught: " << e << endl;
+    }
+    catch (...) {
+        cerr << "Unknown exception caught" << endl;
+    }
+    
+	return make_pair(kp_solution, knapsack.getObjValue());
+
+    //cout << " Max =" << cplex.getObjValue() << endl ; 
+}
+
+
+void Model::Build_Model(ProblemInstance* _p){
+    
+    env = IloEnv();
+
+    try{
+    
+        model = IloModel(env);
+        
+        // Declaring Variables
+        x = IloNumVarArray(env, _p->num_items, 0, 1, IloNumVar::Bool); 
+        
+        for (int i = 0; i < p->num_items ; ++i){
+            stringstream varx;
+            varx << "x_" << i;
+            x[i].setName(varx.str().c_str());
+            model.add(x[i]);
+        }
+
+
+        v = IloNumVarArray(env, _p->num_forfeits_pairs, 0.0, 1.0, IloNumVar::Float);
+
+        for (int k = 0; k < p->num_forfeits_pairs ; ++k){
+            stringstream varv;
+            varv << "v_" << k;
+            v[k].setName(varv.str().c_str());
+            model.add(v[k]);
+        }
+
+        //Add Constraints    
+        addConstraintTotalCapacity(env, model, x, _p); 
+        addConstraintLinearization(env, model, x, v, _p); 
+        addObjective(env,model,x,v,_p);
+
+        knapsack = IloCplex(model);
+        // int timelimit = 30;  // passar como parametro da funcao
+        // knapsack.setParam(IloCplex::Param::TimeLimit,timelimit);
+        knapsack.exportModel("KPFModel.lp");
+        // cplex.extract(model); 
+		time(&start);
+        knapsack.solve();
+		time(&end);
+        double total_time = double(end - start); 
+
+        if(getStatus()==0){
+		    cout<<"Optimum Found"<<endl;
+            cout<<"Value: "<<knapsack.getObjValue()<<endl;
+            cout<<"Exact Solution: "; 
+            for(int i = 0; i < _p->num_items; i++){
+                if(knapsack.getValue(x[i]) > 0){
+                    cout<<i<<" ";
+                }
+            }
+            cout << endl; 
+            cout<<"GAP: "<<knapsack.getMIPRelativeGap()<<endl;
+            cout << "Model Solve Total Time: " << total_time << endl; 
+        }else if(getStatus() == 1){
+            cout<<"Solution Found"<<endl;
+            cout<<"Value: "<<knapsack.getObjValue()<<endl;
+            cout<<"Exact Solution: "; 
+            for(int i = 0; i < _p->num_items; i++){
+                if(knapsack.getValue(x[i]) > 0){
+                    cout<<i<<" ";
+                }
+            }
+            cout << endl; 
+            cout<<"GAP: "<<knapsack.getMIPRelativeGap()<<endl;
+            cout << "Model Solve Total Time: " << total_time << endl; 
+        }else if(getStatus() == 2){
+            cout<< "Infeasible"<< endl;
+            cout << "Model Solve Total Time: " << total_time << endl; 
+        }else{
+            cout<<"Unknown"<<endl;
+            cout << "Model Solve Total Time: " << total_time << endl; 
+        }
+ 
+
+   }
+    catch (IloException& e) {
+        cerr << "Concert exception caught: " << e << endl;
+   }
+    catch (...) {
+        cerr << "Unknown exception caught" << endl;
+   }
+    
+    //cout << " Max =" << cplex.getObjValue() << endl ; 
+}
+
+status Model::getStatus()
+{
+	if (knapsack.getStatus() == IloAlgorithm::Infeasible)
+	{
+		return INFEASIBLE;
+	}
+	else if(knapsack.getStatus() == IloAlgorithm::Optimal){
+		return OPTIMALFOUND;
+	}
+	else
+	{
+		return SOLUTIONFOUND;
+	}
+}
+
+#endif //MODEL_CPP_

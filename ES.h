@@ -14,7 +14,7 @@ class ES
 {
 private:
 	
-	vector<Solution> HeapSol;
+	vector<Solution> Sol;
 	size_t MaxSize;
 
 	friend ostream& operator<<(ostream&, ES);
@@ -30,9 +30,6 @@ public:
 	bool add(Solution s);
 
 	vector<Solution> getConjSol();
-
-	void PrintES();
-
 
 };
 

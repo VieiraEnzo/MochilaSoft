@@ -9,6 +9,9 @@
 #include "ES.h"
 #include "Solution.h"
 #include "LocalSearch.h"
+#include "Model.h"
+#include "Mining.h"
+#include "Pattern.h"
 #include <cassert>
 
 using namespace std;
