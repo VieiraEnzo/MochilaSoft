@@ -1,7 +1,7 @@
 File: sum_instances/O/1000/kpf_9_sum.txt
-Execution Costs: 5035 
-Execution Times: 30.949863 
-Average Cost: 5035.000000
-Average Elapsed Time: 30.949863 seconds
-Best Cost: 5035.000000
-Time: 30.949863
+Execution Costs: 5054 5033 5042 5039 5036 5042 5038 5028 5039 5037 
+Execution Times: 46.055008 12.125409 25.232943 15.117248 23.125175 18.698416 20.235746 10.623371 19.609196 17.176409 
+Average Cost: 5038.799805
+Average Elapsed Time: 20.799892 seconds
+Best Cost: 5054.000000
+Time: 46.055008
