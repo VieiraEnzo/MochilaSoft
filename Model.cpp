@@ -25,7 +25,7 @@ vector<int> convertToBinaryVector(vector<int> &solution, ProblemInstance* _p) {
 }
 
 
-void Model::setMIPstart(vector<int> &solution, IloCplex &cplex, IloNumVarArray &x, ProblemInstance* _p) {  	
+void Model::setMIPstart(vector<int> &solution, IloCplex &cplex, IloBoolVarArray &x, ProblemInstance* _p) {  	
     int solvalx[_p->num_items]; 
 
     vector<int> bin_solution = convertToBinaryVector(solution, _p); 
@@ -45,7 +45,7 @@ void Model::setMIPstart(vector<int> &solution, IloCplex &cplex, IloNumVarArray &
     startVar.end();
 }
 
-void Model::addObjective(IloEnv &env, IloModel &model, IloNumVarArray &x, IloNumVarArray &v, ProblemInstance* _p){
+void Model::addObjective(IloEnv &env, IloModel &model, IloBoolVarArray &x, IloNumVarArray &v, ProblemInstance* _p){
     IloExpr summation(env);
     for(int i=0;i<_p->num_items;++i){
         summation += _p->profits[i]*x[i];
@@ -59,7 +59,7 @@ void Model::addObjective(IloEnv &env, IloModel &model, IloNumVarArray &x, IloNum
 }
 
 
-void Model::addConstraintTotalCapacity(IloEnv &env,IloModel &model,IloNumVarArray &x, ProblemInstance* _p){
+void Model::addConstraintTotalCapacity(IloEnv &env,IloModel &model,IloBoolVarArray &x, ProblemInstance* _p){
     IloExpr summation(env);
     for(int i= 0; i<_p->num_items;++i){
         summation += x[i]*_p->weights[i];       
@@ -71,7 +71,7 @@ void Model::addConstraintTotalCapacity(IloEnv &env,IloModel &model,IloNumVarArra
     model.add(total_capacity); 
 }
 
-void Model::addConstraintLinearization(IloEnv &env,IloModel &model, IloNumVarArray &x, IloNumVarArray &v, ProblemInstance* _p){
+void Model::addConstraintLinearization(IloEnv &env,IloModel &model, IloBoolVarArray &x, IloNumVarArray &v, ProblemInstance* _p){
     int idx_pair = 0;
     for (const auto& pair : _p->forfeits_pairs) {
         model.add(IloRange(env, -IloInfinity, x[pair.first] + x[pair.second] - v[idx_pair], 1, "linearizationConstraint")); 
@@ -80,7 +80,7 @@ void Model::addConstraintLinearization(IloEnv &env,IloModel &model, IloNumVarArr
     
 }
 
-void Model::addConstraintofChoosePattern(IloEnv &env, IloModel &model, IloNumVarArray &z, int num_patterns){
+void Model::addConstraintofChoosePattern(IloEnv &env, IloModel &model, IloBoolVarArray &z, int num_patterns){
     IloExpr summation(env);
     for(int p= 0; p<num_patterns;++p){
         summation += z[p];       
@@ -93,7 +93,7 @@ void Model::addConstraintofChoosePattern(IloEnv &env, IloModel &model, IloNumVar
 } 
 
 
-void Model::addConstraintofFixPattern(IloEnv &env, IloModel &model, IloNumVarArray &x, IloNumVarArray &z, const std::vector<std::vector<int>>& pattern_matrix, int num_patterns, ProblemInstance* _p){
+void Model::addConstraintofFixPattern(IloEnv &env, IloModel &model, IloBoolVarArray &x, IloBoolVarArray &z, const std::vector<std::vector<int>>& pattern_matrix, int num_patterns, ProblemInstance* _p){
     for(int p= 0; p<num_patterns;++p){
         for (int i=0; i < _p->num_items; i++){
             model.add(IloRange(env, 0, x[i] - pattern_matrix[i][p]*z[p], IloInfinity, "fixPatternsConstraint"));   
@@ -114,7 +114,7 @@ void Model::addConstraintofFixPattern(IloEnv &env, IloModel &model, IloNumVarArr
     // model.add(fixpattern); 
 }
 
-void Model::addConstraintLocalBranching(IloEnv &env,IloModel &model,IloNumVarArray &x, std::vector<int> &solution, ProblemInstance* _p){
+void Model::addConstraintLocalBranching(IloEnv &env,IloModel &model,IloBoolVarArray &x, std::vector<int> &solution, ProblemInstance* _p){
     double delta = 0.5 * _p->num_items;
     IloExpr summation(env);
 
@@ -146,7 +146,7 @@ std::pair<Solution, double> Model::Build_Model_with_Patterns(ProblemInstance* _p
         model = IloModel(env);
         
         // Declaring Variables
-        x = IloNumVarArray(env, _p->num_items, 0, 1, IloNumVar::Bool); 
+        IloBoolVarArray x(env, _p->num_items); 
         
         for (int i = 0; i < p->num_items ; ++i){
             stringstream varx;
@@ -165,7 +165,9 @@ std::pair<Solution, double> Model::Build_Model_with_Patterns(ProblemInstance* _p
             model.add(v[k]);
         }
 
-        z = IloNumVarArray(env, num_patterns, 0, 1, IloNumVar::Bool); 
+        IloBoolVarArray z(env, num_patterns); 
+
+        // z = IloNumVarArray(env, num_patterns, 0, 1, IloNumVar::Bool); 
 
         
         for (int p = 0; p < num_patterns; ++p){
@@ -203,22 +205,38 @@ std::pair<Solution, double> Model::Build_Model_with_Patterns(ProblemInstance* _p
 		time(&end);
         double total_time = double(end - start); 
 
-        // cout << "number of patterns: " << num_patterns << endl; 
+        // cout << "Number of mined patterns: " << num_patterns << endl; 
         // std::cout << "Values of z:" << std::endl;
+        // int combined_patterns=0;
         // for (int p = 0; p < num_patterns; ++p) {
         //     std::cout << "z[" << p << "]: " << knapsack.getValue(z[p]) << std::endl;
+        //    if(knapsack.getValue(z[p]) == 1){
+        //        combined_patterns+=1;
+        //     }
         // }
+        // cout << "Number of combined patterns: " << combined_patterns << endl; 
+        // cout << "----------\n";
+
+        // cout << "get values: \n";
+        // for(int i = 0; i < _p->num_items; i++){
+        //     cout << knapsack.getValue(x[i]) << " "; 
+        // }
+        // cout << endl; 
+
 
         if(getStatus()==0){
 		    outfile<<"Optimum Found"<<endl;
             outfile<<"Value: "<<knapsack.getObjValue()<<endl;
             outfile<<"Exact Solution: "; 
             for(int i = 0; i < _p->num_items; i++){
-                if(knapsack.getValue(x[i]) > 0){
+                if(knapsack.getValue(x[i]) == 1){
                     outfile<<i<<" ";
                     kp_solution.add_item(i); 
                 }
             }
+
+            // assert((kp_solution.feasible() == true)); 
+
             outfile << endl; 
             outfile<<"GAP: "<<knapsack.getMIPRelativeGap()<<endl;
             outfile << "Model Solve Total Time: " << total_time << endl; 
@@ -227,7 +245,7 @@ std::pair<Solution, double> Model::Build_Model_with_Patterns(ProblemInstance* _p
             outfile<<"Value: "<<knapsack.getObjValue()<<endl;
             outfile<<"Exact Solution: "; 
             for(int i = 0; i < _p->num_items; i++){
-                if(knapsack.getValue(x[i]) > 0){
+                if(knapsack.getValue(x[i]) == 1){
                     outfile<<i<<" ";
                 }
             }
@@ -266,7 +284,8 @@ std::pair<Solution, double> Model::Build_Model_with_LB(ProblemInstance* _p, vect
         model = IloModel(env);
         
         // Declaring Variables
-        x = IloNumVarArray(env, _p->num_items, 0, 1, IloNumVar::Bool); 
+        IloBoolVarArray x(env, _p->num_items);         
+        // x = IloNumVarArray(env, _p->num_items, 0, 1, IloNumVar::Bool); 
         
         for (int i = 0; i < p->num_items ; ++i){
             stringstream varx;
@@ -326,7 +345,7 @@ std::pair<Solution, double> Model::Build_Model_with_LB(ProblemInstance* _p, vect
             outfile<<"Value: "<<knapsack.getObjValue()<<endl;
             outfile<<"Exact Solution: "; 
             for(int i = 0; i < _p->num_items; i++){
-                if(knapsack.getValue(x[i]) > 0){
+                if(knapsack.getValue(x[i]) == 1){
                     outfile<<i<<" ";
                     kp_solution.add_item(i); 
                 }
@@ -339,7 +358,7 @@ std::pair<Solution, double> Model::Build_Model_with_LB(ProblemInstance* _p, vect
             outfile<<"Value: "<<knapsack.getObjValue()<<endl;
             outfile<<"Exact Solution: "; 
             for(int i = 0; i < _p->num_items; i++){
-                if(knapsack.getValue(x[i]) > 0){
+                if(knapsack.getValue(x[i]) == 1){
                     outfile<<i<<" ";
                 }
             }
@@ -379,7 +398,9 @@ void Model::Build_Model(ProblemInstance* _p){
         model = IloModel(env);
         
         // Declaring Variables
-        x = IloNumVarArray(env, _p->num_items, 0, 1, IloNumVar::Bool); 
+        IloBoolVarArray x(env, _p->num_items); 
+
+        // x = IloNumVarArray(env, _p->num_items, 0, 1, IloNumVar::Bool); 
         
         for (int i = 0; i < p->num_items ; ++i){
             stringstream varx;
@@ -418,7 +439,7 @@ void Model::Build_Model(ProblemInstance* _p){
             cout<<"Value: "<<knapsack.getObjValue()<<endl;
             cout<<"Exact Solution: "; 
             for(int i = 0; i < _p->num_items; i++){
-                if(knapsack.getValue(x[i]) > 0){
+                if(knapsack.getValue(x[i]) == 1){
                     cout<<i<<" ";
                 }
             }
@@ -430,7 +451,7 @@ void Model::Build_Model(ProblemInstance* _p){
             cout<<"Value: "<<knapsack.getObjValue()<<endl;
             cout<<"Exact Solution: "; 
             for(int i = 0; i < _p->num_items; i++){
-                if(knapsack.getValue(x[i]) > 0){
+                if(knapsack.getValue(x[i]) == 1){
                     cout<<i<<" ";
                 }
             }

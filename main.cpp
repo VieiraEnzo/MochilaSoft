@@ -95,7 +95,7 @@ int main(int argc, char *argv[]){
         if (entry.is_regular_file())
         {   
 
-            int NUM_EXEC = 1; 
+            int NUM_EXEC = 10;
             vector<float> costs;
             vector<float> times;
 
@@ -107,7 +107,8 @@ int main(int argc, char *argv[]){
             size_t last_dot_pos = filename.find_last_of('.');
             string i_name = filename.substr(last_slash_pos + 1, last_dot_pos - last_slash_pos - 1);
 
-            std::ofstream outfile("results/exec_"+i_name+"_.txt");
+            string cp = directory_path.substr(directory_path.find_first_of('/'), directory_path.find_last_of('/') - directory_path.find_first_of('/'));
+            std::ofstream outfile("results" + cp + "/exec_"+i_name+"_.txt");
 
             std::filesystem::path currentPath = std::filesystem::current_path();
 
@@ -124,7 +125,7 @@ int main(int argc, char *argv[]){
                     times.push_back(time_taken);
                     total_cost += cost;
                     total_time += time_taken;
-                    outfile << "Number of Forfeit Pairs = " << forfeitPairs << endl;
+                    // outfile << "Number of Forfeit Pairs = " << forfeitPairs << endl;
 
                 }
 
@@ -161,6 +162,7 @@ int main(int argc, char *argv[]){
                 std::cout << "Data successfully written to the file." << std::endl;
             } else {
                 std::cerr << "Failed to open the file for writing." << std::endl;
+                cout << "results" + cp + "/exec_"+i_name+"_.txt" << "\n";
             }
         }
 

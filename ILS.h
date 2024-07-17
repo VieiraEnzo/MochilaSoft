@@ -13,6 +13,7 @@
 #include "Mining.h"
 #include "Pattern.h"
 #include <cassert>
+#include <memory>
 
 using namespace std;
 

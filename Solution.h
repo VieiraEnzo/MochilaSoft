@@ -55,6 +55,8 @@ public:
 	vector<bool> convertToBinaryVector(); 
 	bool CheckSol();
 	int CountForfeit();
+	vector<int> getKS();
+	void updateCapacity();
 
 
 	// Solution operator= (const Solution& other){

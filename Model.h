@@ -23,16 +23,16 @@ class Model {
         IloModel model;
         IloCplex knapsack;
         IloCplex knapsack_lb;
-        IloNumVarArray x; 
+        IloBoolVarArray x; 
         IloNumVarArray v; 
-        IloNumVarArray z; 
+        IloBoolVarArray z; 
         time_t start, end;
-        void addConstraintTotalCapacity(IloEnv &env,IloModel &model,IloNumVarArray &x, ProblemInstance* _p);
-        void addConstraintLinearization(IloEnv &env,IloModel &model,IloNumVarArray &x, IloNumVarArray &v, ProblemInstance* _p);
-        void addObjective(IloEnv &env, IloModel &model, IloNumVarArray &x, IloNumVarArray &v, ProblemInstance* _p);
-        void addConstraintofChoosePattern(IloEnv &env, IloModel &model, IloNumVarArray &z, int num_patterns); 
-        void addConstraintofFixPattern(IloEnv &env, IloModel &model, IloNumVarArray &x, IloNumVarArray &z, const std::vector<std::vector<int>>& pattern_matrix, int num_patterns, ProblemInstance* _p); 
-        void addConstraintLocalBranching(IloEnv &env,IloModel &model,IloNumVarArray &x,std::vector<int> &solution, ProblemInstance* _p);
+        void addConstraintTotalCapacity(IloEnv &env,IloModel &model,IloBoolVarArray &x, ProblemInstance* _p);
+        void addConstraintLinearization(IloEnv &env,IloModel &model,IloBoolVarArray &x, IloNumVarArray &v, ProblemInstance* _p);
+        void addObjective(IloEnv &env, IloModel &model, IloBoolVarArray &x, IloNumVarArray &v, ProblemInstance* _p);
+        void addConstraintofChoosePattern(IloEnv &env, IloModel &model, IloBoolVarArray &z, int num_patterns); 
+        void addConstraintofFixPattern(IloEnv &env, IloModel &model, IloBoolVarArray &x, IloBoolVarArray &z, const std::vector<std::vector<int>>& pattern_matrix, int num_patterns, ProblemInstance* _p); 
+        void addConstraintLocalBranching(IloEnv &env,IloModel &model,IloBoolVarArray &x,std::vector<int> &solution, ProblemInstance* _p);
     public:
         Model(ProblemInstance* _p);
         ~Model();
@@ -41,7 +41,7 @@ class Model {
         std::pair<Solution, double> Build_Model_with_Patterns(ProblemInstance* _p, int num_patterns, const std::vector<std::vector<int>>& pattern_matrix, vector<int> best_solution);
         status getStatus();
         // std::tuple <std::vector<int>,int> solveLB(std::vector<int> &solution,int timebound,double upperbound);
-        void setMIPstart(vector<int> &Solution, IloCplex &cplex, IloNumVarArray &x, ProblemInstance* _p);
+        void setMIPstart(vector<int> &Solution, IloCplex &cplex, IloBoolVarArray &x, ProblemInstance* _p);
         // IloEnv getEnv(){return env;};
     
         

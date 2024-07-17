@@ -244,7 +244,6 @@ saida: vetor de booleano
 tempo: O(1)
 */
 vector<bool>  Solution::convertToBinaryVector() {
-
     return inside;
 }
 
@@ -269,4 +268,26 @@ int::Solution::CountForfeit(){
     	count += (is_in_sack(pr.first) && is_in_sack(pr.second));
   	}
 	return count;
+}
+
+vector<int> Solution::getKS(){
+	vector<int> MORTE;
+	for(int i = 0; i < p->num_items; i++){
+		if(inside[i]) MORTE.push_back(i);
+	}
+	return MORTE;
+}
+
+ostream& operator<<(ostream& strm, Solution& s){
+	auto Sack = s.getKS();
+	for(vector<int>::iterator it = Sack.begin(); it!=Sack.end(); ++it){
+			strm<<*it<<" ";
+	}
+
+	return strm;
+}
+
+void Solution::updateCapacity(){
+	CostCalculated = false;
+	
 }

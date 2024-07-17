@@ -139,9 +139,10 @@ int ILS::solve(ProblemInstance* _p, Solution &solution){
   int current_cost = best_cost;
   best_sol = solution; 
 
-  ES *EliteSet = new ES(15);
+  std::unique_ptr<ES> EliteSet = std::make_unique<ES>(15);
   int no_change = 0;
   int iter = 0;
+
   while(iter < iter_wo_impr){
     iter++;
     string flight_step = "cauchy"; 
@@ -149,13 +150,14 @@ int ILS::solve(ProblemInstance* _p, Solution &solution){
     localsearch.solve(_p, solution);
 
     current_cost = solution.getCost();
+
     no_change += 1;
     if(EliteSet->add(solution)){
       no_change = 0;
     }
 
-    assert(no_change <= 10);
-    if(no_change == 10){
+    assert(no_change <= 15);
+    if(no_change == 15){
       no_change = 0;
 
       int suporte = 2;
@@ -169,8 +171,8 @@ int ILS::solve(ProblemInstance* _p, Solution &solution){
       vector <vector<int>> pattern_matrix(_p->num_items, vector<int>(pattern_size));
       for(int i = 0; i < pattern_size; i++){
         Pattern *Mined_Items = Mined_Patterns[i];
-        for(Pattern tmp : Mined_Items->elements){
-          pattern_matrix[i][tmp] = 1;
+        for(int tmp : Mined_Items->elements){
+          pattern_matrix[tmp][i] = 1;
         }
       }
 
@@ -184,9 +186,14 @@ int ILS::solve(ProblemInstance* _p, Solution &solution){
       }
 
       Model kpf_model(_p);
-      auto model_result = kpf_model.Build_Model_With_Patterns(_p, pattern_size, pattern_matrix, elements);
+      auto model_result = kpf_model.Build_Model_with_Patterns(_p, pattern_size, pattern_matrix, elements);
       solution = model_result.first;
+      // solution.updateCapacity();
       current_cost = model_result.second;
+
+      EliteSet = std::make_unique<ES>(15);
+
+      
     }
 
     if(current_cost > best_cost){
@@ -194,9 +201,9 @@ int ILS::solve(ProblemInstance* _p, Solution &solution){
       best_cost = current_cost;
       iter = 0; 
     }
+
   }
 
   solution = best_sol;
-  assert(best_cost == best_sol.getCost());
 	return best_cost;
 }
