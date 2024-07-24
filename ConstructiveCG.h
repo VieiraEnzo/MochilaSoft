@@ -16,7 +16,7 @@ class ConstructiveCG{
   private:
     int n;
     int cap;
-    vector <double> profits;
+    vector <int> profits;
     Constructive constructive; 
 
   public:

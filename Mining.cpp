@@ -128,6 +128,7 @@ void Mining::unmapall_file(){
 }
 
 
+
 void Mining::printPatterns(const char *filename){
 	// method to print all patterns
 

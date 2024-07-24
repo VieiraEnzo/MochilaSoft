@@ -38,7 +38,7 @@ entrada: -
 saida: Lucro da solução
 tempo: O(n^2)
 */
-double Solution::getCost(){
+int Solution::getCost(){
 
 	if(CostCalculated) return cost;
 
@@ -233,7 +233,6 @@ saida: booleano dizendo se é menor
 tempo: O(n^2)
 */
 bool operator< (Solution &a, Solution &b){
-	if(a.getCost()-b.getCost()<1E-5 || b.getCost()-a.getCost()>-1E-5)return false;
 	return a.getCost() < b.getCost();
 }
 
@@ -255,7 +254,7 @@ bool::Solution::can_add(int i){
 }
 
 bool::Solution::CheckSol(){
-	double peso  = 0;
+	int peso  = 0;
 	for(int i = 0; i < p->num_items; i++){
 		if(is_in_sack(i)) peso += p->weights[i];
 	}

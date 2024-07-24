@@ -20,10 +20,10 @@ public:
 	string filename, i_name; 
 	
 	int* items; // Items in the knapsack
-	double* profits; //Profits of the items
-	double* weights; //Weights of thse items
-	double** mD;  // forfeits costs and pairs
-	double* forfeits_costs; // forfeits costs
+	int* profits; //Profits of the items
+	int* weights; //Weights of thse items
+	int** mD;  // forfeits costs and pairs
+	int* forfeits_costs; // forfeits costs
 	vector<pair<int, int>> forfeits_pairs; // forfeits pairs
 
 	void load_file(const char *const f); //Function to load the file

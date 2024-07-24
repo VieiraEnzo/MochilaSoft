@@ -115,7 +115,7 @@ void Model::addConstraintofFixPattern(IloEnv &env, IloModel &model, IloBoolVarAr
 }
 
 void Model::addConstraintLocalBranching(IloEnv &env,IloModel &model,IloBoolVarArray &x, std::vector<int> &solution, ProblemInstance* _p){
-    double delta = 0.5 * _p->num_items;
+    double delta = 0.5 * _p->num_items; 
     IloExpr summation(env);
 
     vector<int> bin_solution = convertToBinaryVector(solution, _p); 
@@ -137,7 +137,26 @@ void Model::addConstraintLocalBranching(IloEnv &env,IloModel &model,IloBoolVarAr
     model.add(constr_localbranch);    
 }
 
-std::pair<Solution, double> Model::Build_Model_with_Patterns(ProblemInstance* _p, int num_patterns, const std::vector<std::vector<int>>& pattern_matrix, vector<int> best_solution){
+
+void Model::addConstraintImprSol(IloEnv &env, IloModel &model, IloBoolVarArray &x, IloNumVarArray &v, ProblemInstance* _p, int best_value){
+    IloExpr summation(env);
+    for(int i=0;i<_p->num_items;++i){
+        summation += _p->profits[i]*x[i];
+    }
+
+    for(int k=0;k<_p->num_forfeits_pairs;++k){
+        summation -= _p->forfeits_costs[k]*v[k];
+    }
+    IloRange checkimpr(env, best_value, summation, IloInfinity);
+    stringstream name;
+    name << "checkimpr: ";
+    checkimpr.setName(name.str().c_str());
+    model.add(checkimpr); 
+}
+
+
+
+std::pair<Solution, int> Model::Build_Model_with_Patterns(ProblemInstance* _p, int num_patterns, const std::vector<std::vector<int>>& pattern_matrix, vector<int> best_solution, int best_value){
     env = IloEnv();
     Solution kp_solution(_p); 
 
@@ -182,13 +201,13 @@ std::pair<Solution, double> Model::Build_Model_with_Patterns(ProblemInstance* _p
         addConstraintLinearization(env, model, x, v, _p); 
         addConstraintofChoosePattern(env, model, z, num_patterns); 
         addConstraintofFixPattern(env, model, x, z, pattern_matrix, num_patterns, _p); 
+        addConstraintImprSol(env, model, x, v, _p, best_value); 
         addObjective(env,model,x,v,_p);
 
-        
-
     	ofstream outfile;
-	    // cout << "---------------------instance_name:" << _p->i_name << endl; 
-        string log_filename = "./output_cplex/relatorio_"+_p->i_name+"_.txt"; 
+	    // cout << "---------------------filename:" << _p->filename << endl; 
+
+        string log_filename = "./output_cplex/results/relatorio_"+_p->i_name+"_patterns.txt"; 
         outfile.open(log_filename, std::ios_base::app);
         
 
@@ -196,14 +215,13 @@ std::pair<Solution, double> Model::Build_Model_with_Patterns(ProblemInstance* _p
         // int timelimit = 30;  
         // knapsack.setParam(IloCplex::Param::TimeLimit,timelimit);
         knapsack.setOut(outfile);
-        setMIPstart(best_solution, knapsack, x, _p); 
-
+        // setMIPstart(best_solution, knapsack, x, _p); 
         // knapsack.exportModel("KPFModel.lp");
         // cplex.extract(model); 
-		time(&start);
-        knapsack.solve();
-		time(&end);
-        double total_time = double(end - start); 
+
+
+        // double objValue = knapsack.getObjValue();
+        // cout << "Objective Value: " << objValue << endl; 
 
         // cout << "Number of mined patterns: " << num_patterns << endl; 
         // std::cout << "Values of z:" << std::endl;
@@ -223,56 +241,65 @@ std::pair<Solution, double> Model::Build_Model_with_Patterns(ProblemInstance* _p
         // }
         // cout << endl; 
 
+        if(knapsack.solve()){
+            double solveTime = knapsack.getTime();
+            double objValue = knapsack.getObjValue();
 
-        if(getStatus()==0){
-		    outfile<<"Optimum Found"<<endl;
-            outfile<<"Value: "<<knapsack.getObjValue()<<endl;
-            outfile<<"Exact Solution: "; 
-            for(int i = 0; i < _p->num_items; i++){
-                if(knapsack.getValue(x[i]) == 1){
-                    outfile<<i<<" ";
-                    kp_solution.add_item(i); 
+            if(getStatus()==0){
+                outfile<<"Optimum Found"<<endl;
+                outfile<<"Value: "<<knapsack.getObjValue()<<endl;
+                outfile<<"Solution: "; 
+                for(int i = 0; i < _p->num_items; i++){
+                    if(knapsack.getValue(x[i]) == 1){
+                        outfile<<i<<" ";
+                        kp_solution.add_item(i); 
+                    }
                 }
+                outfile << endl; 
+                outfile<<"GAP: "<<knapsack.getMIPRelativeGap()<<endl;
+                outfile << "Solve Time: " << solveTime << " seconds\n" << endl;
+
+            }else if(getStatus() == 1){
+                outfile<<"Solution Found"<<endl;
+                outfile<<"Value: "<<knapsack.getObjValue()<<endl;
+                outfile<<"Solution: "; 
+                for(int i = 0; i < _p->num_items; i++){
+                    if(knapsack.getValue(x[i]) == 1){
+                        outfile<<i<<" ";
+                    }
+                }
+                outfile << endl; 
+                outfile<<"GAP: "<<knapsack.getMIPRelativeGap()<<endl;
+                outfile << "Solve Time: " << solveTime << " seconds\n" << endl;
             }
 
-            // assert((kp_solution.feasible() == true)); 
-
-            outfile << endl; 
-            outfile<<"GAP: "<<knapsack.getMIPRelativeGap()<<endl;
-            outfile << "Model Solve Total Time: " << total_time << endl; 
-        }else if(getStatus() == 1){
-            outfile<<"Solution Found"<<endl;
-            outfile<<"Value: "<<knapsack.getObjValue()<<endl;
-            outfile<<"Exact Solution: "; 
-            for(int i = 0; i < _p->num_items; i++){
-                if(knapsack.getValue(x[i]) == 1){
-                    outfile<<i<<" ";
-                }
-            }
-            outfile << endl; 
-            outfile<<"GAP: "<<knapsack.getMIPRelativeGap()<<endl;
-            outfile << "Model Solve Total Time: " << total_time << endl; 
-        }else if(getStatus() == 2){
-            outfile<< "Infeasible"<< endl;
-            outfile << "Model Solve Total Time: " << total_time << endl; 
         }else{
-            outfile<<"Unknown"<<endl;
-            outfile << "Model Solve Total Time: " << total_time << endl; 
+            // Handle the infeasibility or other solution status
+            outfile << "Solution not found. Status: " << knapsack.getStatus() << endl;
+
+            IloAlgorithm::Status status = knapsack.getStatus();
+            if (status == IloAlgorithm::Infeasible) {
+                outfile << "The model is infeasible.\n" << endl;
+            } else if (status == IloAlgorithm::Unbounded) {
+                outfile << "The model is unbounded.\n" << endl;
+            } else {
+                outfile << "The model could not be solved for another reason.\n" << endl;
+            }
+            return make_pair(kp_solution, 0);
         }
-        outfile << "---------------------\n\n";
-        // cout<<"Model Solution Cost: "<<knapsack.getObjValue()<<endl;
+        
+        outfile << "\n\n ---------- Execution Model with Patterns for " + _p->filename + " ---------- \n\n" << endl; 
         outfile.close(); 
     }
     catch (IloException& e) {
-        cerr << "Concert exception caught: " << e << endl;
+       cerr << "Error: " << e.getMessage() << endl;
     }
     catch (...) {
         cerr << "Unknown exception caught" << endl;
     }
     
+    // env.end();
 	return make_pair(kp_solution, knapsack.getObjValue());
-
-    //cout << " Max =" << cplex.getObjValue() << endl ; 
 }
 
 std::pair<Solution, double> Model::Build_Model_with_LB(ProblemInstance* _p, vector<int> best_solution){
@@ -389,9 +416,9 @@ std::pair<Solution, double> Model::Build_Model_with_LB(ProblemInstance* _p, vect
 }
 
 
-void Model::Build_Model(ProblemInstance* _p){
-    
+std::pair<Solution, int> Model::Build_Model(ProblemInstance* _p, vector<int> best_solution){
     env = IloEnv();
+    Solution kp_solution(_p); 
 
     try{
     
@@ -424,58 +451,77 @@ void Model::Build_Model(ProblemInstance* _p){
         addConstraintLinearization(env, model, x, v, _p); 
         addObjective(env,model,x,v,_p);
 
+        ofstream outfile;
+	    // cout << "---------------------instance_name:" << _p->i_name << endl; 
+        string log_filename = "./output_cplex/results/relatorio_"+_p->i_name+"_model.txt"; 
+        outfile.open(log_filename, std::ios_base::app);
+        
+
         knapsack = IloCplex(model);
-        // int timelimit = 30;  // passar como parametro da funcao
-        // knapsack.setParam(IloCplex::Param::TimeLimit,timelimit);
-        knapsack.exportModel("KPFModel.lp");
-        // cplex.extract(model); 
-		time(&start);
-        knapsack.solve();
-		time(&end);
-        double total_time = double(end - start); 
+        knapsack.setParam(IloCplex::Param::TimeLimit,180);
+        knapsack.setOut(outfile);
+        setMIPstart(best_solution, knapsack, x, _p); 
+        // knapsack.exportModel("KPFModel.lp");
+       
+        if(knapsack.solve()){
+            double solveTime = knapsack.getTime();
+            double objValue = knapsack.getObjValue();
 
-        if(getStatus()==0){
-		    cout<<"Optimum Found"<<endl;
-            cout<<"Value: "<<knapsack.getObjValue()<<endl;
-            cout<<"Exact Solution: "; 
-            for(int i = 0; i < _p->num_items; i++){
-                if(knapsack.getValue(x[i]) == 1){
-                    cout<<i<<" ";
+            if(getStatus()==0){
+                outfile<<"Optimum Found"<<endl;
+                outfile<<"Value: "<<knapsack.getObjValue()<<endl;
+                outfile<<"Solution: "; 
+                for(int i = 0; i < _p->num_items; i++){
+                    if(knapsack.getValue(x[i]) == 1){
+                        outfile<<i<<" ";
+                        kp_solution.add_item(i); 
+                    }
                 }
-            }
-            cout << endl; 
-            cout<<"GAP: "<<knapsack.getMIPRelativeGap()<<endl;
-            cout << "Model Solve Total Time: " << total_time << endl; 
-        }else if(getStatus() == 1){
-            cout<<"Solution Found"<<endl;
-            cout<<"Value: "<<knapsack.getObjValue()<<endl;
-            cout<<"Exact Solution: "; 
-            for(int i = 0; i < _p->num_items; i++){
-                if(knapsack.getValue(x[i]) == 1){
-                    cout<<i<<" ";
+                outfile << endl; 
+                outfile<<"GAP: "<<knapsack.getMIPRelativeGap()<<endl;
+                outfile << "Solve Time: " << solveTime << " seconds\n" << endl;
+
+            }else if(getStatus() == 1){
+                outfile<<"Solution Found"<<endl;
+                outfile<<"Value: "<<knapsack.getObjValue()<<endl;
+                outfile<<"Solution: "; 
+                for(int i = 0; i < _p->num_items; i++){
+                    if(knapsack.getValue(x[i]) == 1){
+                        outfile<<i<<" ";
+                    }
                 }
+                outfile << endl; 
+                outfile<<"GAP: "<<knapsack.getMIPRelativeGap()<<endl;
+                outfile << "Solve Time: " << solveTime << " seconds\n" << endl;
             }
-            cout << endl; 
-            cout<<"GAP: "<<knapsack.getMIPRelativeGap()<<endl;
-            cout << "Model Solve Total Time: " << total_time << endl; 
-        }else if(getStatus() == 2){
-            cout<< "Infeasible"<< endl;
-            cout << "Model Solve Total Time: " << total_time << endl; 
+
         }else{
-            cout<<"Unknown"<<endl;
-            cout << "Model Solve Total Time: " << total_time << endl; 
-        }
- 
+            // Handle the infeasibility or other solution status
+            outfile << "Solution not found. Status: " << knapsack.getStatus() << endl;
 
-   }
+            IloAlgorithm::Status status = knapsack.getStatus();
+            if (status == IloAlgorithm::Infeasible) {
+                outfile << "The model is infeasible.\n" << endl;
+            } else if (status == IloAlgorithm::Unbounded) {
+                outfile << "The model is unbounded.\n" << endl;
+            } else {
+                outfile << "The model could not be solved for another reason.\n" << endl;
+            }
+            return make_pair(kp_solution, 0);
+        }
+        
+        outfile << "\n\n ---------- Execution Original Model for " + _p->filename + " ---------- \n\n" << endl; 
+        outfile << "---------------------------------------------------------------\n\n"; 
+        outfile.close(); 
+    }
     catch (IloException& e) {
-        cerr << "Concert exception caught: " << e << endl;
-   }
+       cerr << "Error: " << e.getMessage() << endl;
+    }
     catch (...) {
         cerr << "Unknown exception caught" << endl;
-   }
+    }
     
-    //cout << " Max =" << cplex.getObjValue() << endl ; 
+	return make_pair(kp_solution, knapsack.getObjValue());
 }
 
 status Model::getStatus()

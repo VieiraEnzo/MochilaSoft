@@ -28,14 +28,14 @@ void ProblemInstance::load_file(const char *const f)
 	file >> budget;
 	
     items = new int[num_items]; 
-	profits = new double [num_items];
-	weights = new double[num_items];
+	profits = new int [num_items];
+	weights = new int[num_items];
 
-	forfeits_costs = new double[num_forfeits_pairs]; 
+	forfeits_costs = new int[num_forfeits_pairs]; 
 	
-	mD = new double*[num_items];
+	mD = new int*[num_items];
     for (int i = 0; i < num_items; ++i) {
-        mD[i] = new double[num_items]();
+        mD[i] = new int[num_items]();
     }
 
 	//Initiate mD with 0

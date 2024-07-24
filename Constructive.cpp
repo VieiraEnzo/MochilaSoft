@@ -9,7 +9,7 @@ void Constructive::Greedy_Forfeits(ProblemInstance* _p, Solution &solution){ //O
 
   int n = _p->num_items;
 
-  vector <double> profit(n);
+  vector <int> profit(n);
   for(int i = 0; i < n; i++){
     profit[i] = _p->profits[i];
   }

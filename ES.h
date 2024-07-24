@@ -14,7 +14,7 @@ class ES
 {
 private:
 	
-	vector<Solution> HeapSol;
+	set<Solution> HeapSol;
 	size_t MaxSize;
 
 	friend ostream& operator<<(ostream&, ES);
