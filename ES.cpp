@@ -15,22 +15,26 @@ size_t ES::getESsize(){
 	return HeapSol.size();
 }
 
+bool operator<(Solution a, Solution b){
+	return a.getCost() < b.getCost();
+}
+
+
 bool ES::add(Solution s){
 
 	if(HeapSol.find(s) != HeapSol.end()) return false;
-	
-	Solution Worst = *HeapSol.begin();
 
 	if(HeapSol.size() < MaxSize ){
-
 		HeapSol.insert(s);
 		return true;
-
-	}else if(s.getCost() > Worst.getCost()){
+	}
+	
+	Solution Worst = *HeapSol.begin();
+	
+	if(s.getCost() > Worst.getCost()){
 
 		HeapSol.erase(HeapSol.begin());
 		HeapSol.insert(s);
-
 		return true;
 	}
 		

@@ -184,10 +184,15 @@ int ILS::solve(ProblemInstance* _p, Solution &solution){
       }
 
       Model kpf_model(_p);
-      auto model_result = kpf_model.Build_Model_with_Patterns(_p, pattern_size, pattern_matrix, elements, best_cost);
+      pair<Solution, int> model_result = kpf_model.Build_Model_with_Patterns(_p, pattern_size, pattern_matrix, elements, best_cost);//,best_cost
       solution = model_result.first;
-      // solution.updateCapacity();
       current_cost = model_result.second;
+
+      if(current_cost == 0){ // Infeasible
+          solution = best_sol;
+          current_cost = best_cost;
+      }
+    
 
       EliteSet = std::make_unique<ES>(15);
 
