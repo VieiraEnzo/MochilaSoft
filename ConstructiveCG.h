@@ -24,5 +24,7 @@ class ConstructiveCG{
     void Greedy_Forfeits_Init(ProblemInstance* _p, Solution &solution); 
     void Carousel_Forfeits(ProblemInstance* _p, Solution &solution, 
                             double max_iter, double pct_rm); 
+    void Carousel_Forfeits_Adaptive(ProblemInstance* _p, Solution &solution, 
+                                double max_iter, double pct_rm, double p);
 }; 
 #endif //ConstructiveCG_H_

@@ -57,6 +57,8 @@ public:
 	int CountForfeit();
 	vector<int> getKS();
 	void updateCapacity();
+	void clear();
+	void remove_oldest_choice_adaptive(double percentage);
 
 
 	// Solution operator= (const Solution& other){

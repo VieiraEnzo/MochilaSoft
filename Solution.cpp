@@ -290,3 +290,59 @@ void Solution::updateCapacity(){
 	CostCalculated = false;
 	
 }
+
+void Solution::clear(){
+	
+	CostCalculated = true;
+	hash = 0 ;
+    used_capacity = 0;
+	num_items_in_sol = 0;
+	cost = 0;
+	
+	freq.assign(p->num_items, 0);
+	inside.assign(p->num_items, 0);
+	dq.clear();
+
+}
+
+void::Solution::remove_oldest_choice_adaptive(double percentage)
+{
+
+    // Step 1: Calculate the number of elements to select based on percentage
+    int numElementsToSelect = static_cast<int>(get_size() * percentage);
+
+    // Step 2: Ensure numElementsToSelect is within bounds of Sack size
+    numElementsToSelect = min(numElementsToSelect, static_cast<int>(get_size()));
+
+    // Step 3: Select the first numElementsToSelect elements from Sack
+	//Subset = (0, numElementsToSelect)
+
+    // Step 4: Choose a random element from the subset
+    if (get_size() != 0) {
+        int randomIndex = rand() % numElementsToSelect; // Random index within subset
+
+		//Remove Element with that index
+		while(!dq.empty() && (!inside[dq.front()] || freq[dq.front()] > 1)){
+			freq[dq.front()]--;
+			dq.pop_front();
+		}
+
+		int curIndex = 0;
+		auto it = dq.begin();
+		while(curIndex != randomIndex){
+			auto toRemove = it++;
+			while(!dq.empty() && (!inside[*toRemove] || freq[*toRemove] > 1)){
+				freq[*toRemove]--;
+				dq.erase(toRemove);
+				toRemove = it++;
+			}
+			curIndex++;
+			it++;
+		}
+
+		int randomElement = *it;
+
+		remove_item(randomElement);
+    }
+
+}

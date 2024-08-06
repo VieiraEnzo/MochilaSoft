@@ -47,7 +47,7 @@ std::vector<double> process_file(const string &file_path)
     double pct_rm = 0.05;
     constructive.Carousel_Forfeits(p, solution, max_iter, pct_rm);
 
-    cout << solution.getCost() << " ";
+    // cout << solution.getCost() << " ";
 
     int iter_wo_impr = 1000;
     // ES EliteSet(15);
@@ -95,7 +95,7 @@ int main(int argc, char *argv[]){
         if (entry.is_regular_file())
         {   
 
-            int NUM_EXEC = 2;
+            int NUM_EXEC = 10;
             vector<float> costs;
             vector<float> times;
 

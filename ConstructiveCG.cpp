@@ -98,4 +98,32 @@ void ConstructiveCG::Carousel_Forfeits(ProblemInstance* _p, Solution &solution,
   // cout << "--------- ACABOU O CARROSEL ---------" << "\n";
 
   Greedy_Forfeits_Init(_p, solution);
+};
+
+
+/*
+construtivo carrosel adptativo para o ILS
+entrada: instância do problema, solução vazia (que será modificada)
+saída: -
+tempo: O(n^2)
+*/
+void ConstructiveCG::Carousel_Forfeits_Adaptive(ProblemInstance* _p, Solution &solution, double max_iter, double pct_rm, double p){
+
+    constructive.Greedy_Forfeits(_p, solution);
+
+    int num_items_removed = solution.get_size() * pct_rm;
+
+    for(int i = 0; i < num_items_removed; i++){ 
+        solution.remove_newest_choice();
+    }
+
+    int carousel_iter = max_iter * solution.get_size();
+
+    for(int i = 0; i < carousel_iter; i++){
+        solution.remove_oldest_choice_adaptive(p); 
+        Greedy_Forfeits_Single(_p, solution);
+    }
+
+    Greedy_Forfeits_Init(_p, solution); 
+
 }; 

@@ -9,6 +9,7 @@
 #include "ES.h"
 #include "Solution.h"
 #include "LocalSearch.h"
+#include "ConstructiveCG.h"
 #include "Model.h"
 #include "Mining.h"
 #include "Pattern.h"

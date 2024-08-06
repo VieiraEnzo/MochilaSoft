@@ -118,6 +118,35 @@ void perturbate(
 }
 
 /*
+Substitui a solução atual por uma aleatória no vetor
+entrada:
+- vetor de soluções
+saída: -
+tempo: O(n * #itens removidos) ou O(#itens removidos)
+*/
+void getRandomVector(Solution solution, const vector<vector<int>>& vec) {
+    // Check if the input vector of vectors is empty
+    if (vec.empty()) {
+        throw invalid_argument("Input vector of vectors is empty");
+    }
+    
+    // Create a random number generator
+    random_device rd;  // Seed generator
+    mt19937 gen(rd()); // Mersenne Twister generator
+    uniform_int_distribution<> dis(0, vec.size() - 1); // Uniform distribution
+
+    // Generate a random index
+    int randomIndex = dis(gen);
+
+    solution.clear();
+
+    // Solutions become the new solution
+    for(auto num : vec[randomIndex]){
+      solution.add_itemO(num);
+    }
+}
+
+/*
 faz a iterated local search em uma solução parcial gerada pelo construtivo
 entrada:
 - instância do problema
@@ -129,6 +158,7 @@ tempo: O(#total de iterações) * O(perturbate)
 int ILS::solve(ProblemInstance* _p, Solution &solution){
   Solution best_sol(_p); 
 
+  ConstructiveCG constructive;
   LocalSearch localsearch(p); 
   localsearch.solve(p, solution);
   
@@ -139,72 +169,106 @@ int ILS::solve(ProblemInstance* _p, Solution &solution){
 
   std::unique_ptr<ES> EliteSet = std::make_unique<ES>(15);
   int no_change = 0;
-  int iter = 0;
 
-  while(iter < iter_wo_impr){
-    iter++;
-    string flight_step = "cauchy"; 
-    perturbate(solution, _p, iter, iter_wo_impr, flight_step); 
-    localsearch.solve(_p, solution);
+  vector<vector<int>> patterns_reused;
+  int maxStart = 5;
+  //Constructive Parameters
+  double max_iter = 2;
+  double pct_rm = 0.05;
+  double k = 0.30;
 
-    current_cost = solution.getCost();
+  for(double s=0; s <= maxStart; s++){
 
-    no_change += 1;
-    if(EliteSet->add(solution)){
-      no_change = 0;
-    }
+      Solution solution(p);
+      int iter = 0; 
+      if(s == 0){ 
+          constructive.Carousel_Forfeits(p, solution, max_iter, pct_rm);
+          localsearch.solve(p, solution);
 
-    assert(no_change <= 15);
-    if(no_change == 15){
-      no_change = 0;
+      }else{
 
-      int suporte = 2;
-      Mining miner(*EliteSet, suporte, 15);
-      miner.map_file();
-      miner.mine();
-      miner.unmapall_file();
+          getRandomVector(solution, patterns_reused);
 
-      Pattern **Mined_Patterns = miner.getlistOfPatterns();
-      int pattern_size = miner.getSizePatterns();
-      vector <vector<int>> pattern_matrix(_p->num_items, vector<int>(pattern_size));
-      for(int i = 0; i < pattern_size; i++){
-        Pattern *Mined_Items = Mined_Patterns[i];
-        for(int tmp : Mined_Items->elements){
-          pattern_matrix[tmp][i] = 1;
+          constructive.Carousel_Forfeits_Adaptive(p, solution, max_iter, pct_rm, k);
+          localsearch.solve(p, solution);
+          patterns_reused.clear();
+
+      }  
+
+
+      while(iter < iter_wo_impr){
+        iter++;
+        string flight_step = "cauchy"; 
+        perturbate(solution, _p, iter, iter_wo_impr, flight_step); 
+        localsearch.solve(_p, solution);
+
+        current_cost = solution.getCost();
+
+        no_change += 1;
+        if(EliteSet->add(solution)){
+          no_change = 0;
         }
-      }
 
-      vector <int> elements;
-      int num = 0;
-      for(bool tmp : best_sol.inside){
-        if(tmp == 1){
-          elements.push_back(num);
+        assert(no_change <= 15);
+        if(no_change == 15){
+          no_change = 0;
+
+          int suporte = 2;
+          Mining miner(*EliteSet, suporte, 15);
+          miner.map_file();
+          miner.mine();
+          miner.unmapall_file();
+
+          Pattern **Mined_Patterns = miner.getlistOfPatterns();
+          int pattern_size = miner.getSizePatterns();
+
+          //Get random mined pattern to reuse
+          int randPos = 0;
+          randPos = rand()%pattern_size;
+          Pattern *Mined_Itens_reused = Mined_Patterns[randPos];
+          patterns_reused.push_back(Mined_Itens_reused->elements);
+
+          //Construct pattern matrix
+          vector <vector<int>> pattern_matrix(_p->num_items, vector<int>(pattern_size));
+          for(int i = 0; i < pattern_size; i++){
+            Pattern *Mined_Items = Mined_Patterns[i];
+            for(int tmp : Mined_Items->elements){
+              pattern_matrix[tmp][i] = 1;
+            }
+          }
+
+          vector <int> elements;
+          int num = 0;
+          for(bool tmp : best_sol.inside){
+            if(tmp == 1){
+              elements.push_back(num);
+            }
+            num += 1;
+          }
+
+          Model kpf_model(_p);
+          pair<Solution, int> model_result = kpf_model.Build_Model_with_Patterns(_p, pattern_size, pattern_matrix, elements, best_cost);//,best_cost
+          solution = model_result.first;
+          current_cost = model_result.second;
+
+          if(current_cost == 0){ // Infeasible
+              solution = best_sol;
+              current_cost = best_cost;
+          }
+        
+
+          EliteSet = std::make_unique<ES>(15);
+
+          
         }
-        num += 1;
+
+        if(current_cost > best_cost){
+          best_sol = solution; 
+          best_cost = current_cost;
+          iter = 0; 
+        }
+
       }
-
-      Model kpf_model(_p);
-      pair<Solution, int> model_result = kpf_model.Build_Model_with_Patterns(_p, pattern_size, pattern_matrix, elements, best_cost);//,best_cost
-      solution = model_result.first;
-      current_cost = model_result.second;
-
-      if(current_cost == 0){ // Infeasible
-          solution = best_sol;
-          current_cost = best_cost;
-      }
-    
-
-      EliteSet = std::make_unique<ES>(15);
-
-      
-    }
-
-    if(current_cost > best_cost){
-      best_sol = solution; 
-      best_cost = current_cost;
-      iter = 0; 
-    }
-
   }
 
   solution = best_sol;
