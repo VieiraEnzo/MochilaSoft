@@ -55,14 +55,20 @@ std::vector<double> process_file(const string &file_path)
     // EliteSet = ils.solve(p, solution);
     int best_cost = ils.solve(p, solution);
 
-    cout << best_cost << "\n";
-
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> time_taken = end - start;
+    cout << "best cost before LB: " << best_cost << "\n";
     
     assert(solution.CheckSol() == 1);
 
-    // delete p; TA DANDO SEG FAULT
+    Model kpf_original_model(p);
+    pair<Solution, double> model = kpf_original_model.Build_Model_with_LB(p, solution.getKS());
+    Solution best_solution = model.first;
+    best_cost = model.second;
+
+    cout << "new best cost: " << best_cost << "\n";
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> time_taken = end - start;
+
 	return {(double)best_cost, time_taken.count(), (double)solution.CountForfeit()};
 }
 
@@ -95,7 +101,7 @@ int main(int argc, char *argv[]){
         if (entry.is_regular_file())
         {   
 
-            int NUM_EXEC = 10;
+            int NUM_EXEC = 2;
             vector<float> costs;
             vector<float> times;
 
