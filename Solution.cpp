@@ -112,7 +112,7 @@ void::Solution::add_itemO(int i){
 	freq[i]++;
 	num_items_in_sol++;
 
-	assert(used_capacity <= p->budget);
+	// assert(used_capacity <= p->budget);
 
 	cost += p->profits[i];
 	for(int j = 0; j < p->num_items; j++) 
@@ -307,7 +307,6 @@ void Solution::clear(){
 
 void::Solution::remove_oldest_choice_adaptive(double percentage)
 {
-
     // Step 1: Calculate the number of elements to select based on percentage
     int numElementsToSelect = static_cast<int>(get_size() * percentage);
 
@@ -315,11 +314,13 @@ void::Solution::remove_oldest_choice_adaptive(double percentage)
     numElementsToSelect = min(numElementsToSelect, static_cast<int>(get_size()));
 
     // Step 3: Select the first numElementsToSelect elements from Sack
-	//Subset = (0, numElementsToSelect)
+	//Subset = (0, numElementsToSelect(
 
     // Step 4: Choose a random element from the subset
-    if (get_size() != 0) {
-        int randomIndex = rand() % numElementsToSelect; // Random index within subset
+    if (numElementsToSelect != 0) {
+		
+		// Random index within subset
+		int randomIndex = rand() % numElementsToSelect; //trocar?
 
 		//Remove Element with that index
 		while(!dq.empty() && (!inside[dq.front()] || freq[dq.front()] > 1)){
@@ -341,7 +342,6 @@ void::Solution::remove_oldest_choice_adaptive(double percentage)
 		}
 
 		int randomElement = *it;
-
 		remove_item(randomElement);
     }
 

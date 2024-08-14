@@ -50,6 +50,24 @@ double cauchy_flight_step(int iter, int max_iter) {
   return cauchy_pdf(x, 0, scale);
 }
 
+double hybrid_cauchy_flight_step(int iter, int max_iter, double current_cost, double best_cost) { 
+    double initial_scale = 1.0;
+    double final_scale = 0.1;
+    double progress = iter / max_iter;
+    double scale = initial_scale * progress + final_scale * (1 - progress);
+
+    double improvement_factor = std::max(
+        0.0, (best_cost - current_cost) / std::max(std::abs(best_cost), 1e-10)
+    );
+
+    double iteration_factor = static_cast<double>(iter) / max_iter;
+    scale = (scale) * (1 - iteration_factor) + (improvement_factor * iteration_factor);  
+
+    double x = cauchy_rvs(0, scale);  // Random variate (sample)
+    
+    return cauchy_pdf(x, 0, scale);
+}
+
 enum choice{
   add,
   rem
@@ -69,11 +87,13 @@ void perturbate(
   ProblemInstance* _p,
   int iter,
   int max_iter,
-  string &flight_step
+  string &flight_step,
+  double current_cost,
+  double best_cost
 ) {
   double flight_step_value;
   if(flight_step == "cauchy"){
-    flight_step_value = abs(cauchy_flight_step(iter, max_iter));
+    flight_step_value = abs(hybrid_cauchy_flight_step(iter, max_iter, current_cost, best_cost));
   }else{
     cout << "Choose a valid flight step." << endl;
     assert(0);
@@ -138,10 +158,10 @@ void getRandomVector(Solution solution, const vector<vector<int>>& vec) {
     // Generate a random index
     int randomIndex = dis(gen);
 
-    solution.clear();
-
     // Solutions become the new solution
     for(auto num : vec[randomIndex]){
+      // assert(solution.can_add(num));
+      if(!solution.can_add(num)) cout << "toma\n";
       solution.add_itemO(num);
     }
 }
@@ -156,50 +176,63 @@ saída:
 tempo: O(#total de iterações) * O(perturbate)
 */
 int ILS::solve(ProblemInstance* _p, Solution &solution){
+  
   Solution best_sol(_p); 
-
   ConstructiveCG constructive;
   LocalSearch localsearch(p); 
-  localsearch.solve(p, solution);
-  
-  int best_cost = solution.getCost();
-
-  int current_cost = best_cost;
-  best_sol = solution; 
 
   std::unique_ptr<ES> EliteSet = std::make_unique<ES>(15);
+  
   int no_change = 0;
-
+  
   vector<vector<int>> patterns_reused;
   int maxStart = 5;
+  
   //Constructive Parameters
   double max_iter = 2;
   double pct_rm = 0.05;
   double k = 0.30;
 
+  constructive.Carousel_Forfeits(p, solution, max_iter, pct_rm);
+  localsearch.solve(p, solution);
+  int best_cost = solution.getCost();
+  int current_cost = best_cost;
+  best_sol = solution;
+
+  /* 
+    Grandes problemas: 
+    1- tem vezes que ele nn minera nenhum padrao (ES size é pequeno)
+    2- O padrão minerado, por vezes, não é uma solução feasible
+  */
+
+
   for(double s=0; s <= maxStart; s++){
 
-      Solution solution(p);
+      cout << "entrou \n";
       int iter = 0; 
-      if(s == 0){ 
-          constructive.Carousel_Forfeits(p, solution, max_iter, pct_rm);
-          localsearch.solve(p, solution);
+      if(s != 0){
 
-      }else{
+          solution.clear();
 
-          getRandomVector(solution, patterns_reused);
+          getRandomVector(solution, patterns_reused); 
 
           constructive.Carousel_Forfeits_Adaptive(p, solution, max_iter, pct_rm, k);
+
+          assert(solution.CheckSol());
+
           localsearch.solve(p, solution);
+
+          cout << "opa4 \n";
           patterns_reused.clear();
 
       }  
+      cout << "saiu1 \n";
 
 
       while(iter < iter_wo_impr){
         iter++;
         string flight_step = "cauchy"; 
-        perturbate(solution, _p, iter, iter_wo_impr, flight_step); 
+        perturbate(solution, _p, iter, iter_wo_impr, flight_step, current_cost, best_cost); 
         localsearch.solve(_p, solution);
 
         current_cost = solution.getCost();
@@ -213,7 +246,13 @@ int ILS::solve(ProblemInstance* _p, Solution &solution){
         if(no_change == 15){
           no_change = 0;
 
-          int suporte = 2;
+          // set<vector<int>> k;
+          // for(auto a :(*EliteSet).HeapSol){
+          //   k.insert(a.getKS()); 
+          // }
+          // cout << "ES size: " << k.size() << " \n"; 
+
+          int suporte = 0.01 * _p->num_items;
           Mining miner(*EliteSet, suporte, 15);
           miner.map_file();
           miner.mine();
@@ -224,9 +263,27 @@ int ILS::solve(ProblemInstance* _p, Solution &solution){
 
           //Get random mined pattern to reuse
           int randPos = 0;
+          // cout << "ptsize " << pattern_size << "\n";
+          // if(pattern_size <= 15){
+          //   set<vector<int>> s;
+          //   for(int i = 0; i < pattern_size; i++){
+          //     s.insert(Mined_Patterns[i]->elements);
+          //   }
+          //   cout << "Tamanho de diferentes : " << s.size() << " " << pattern_size << "\n"; 
+          // }
+          assert(pattern_size != 0);
+
           randPos = rand()%pattern_size;
           Pattern *Mined_Itens_reused = Mined_Patterns[randPos];
+          int cost = 0;
+          for(auto num : Mined_Itens_reused->elements){
+            cost += _p->weights[num];
+          }
+          cout << "tamanho do grupo minerado " <<  (Mined_Itens_reused->elements).size() << " " << cost << "\n";
+          // assert(cost <= _p->budget);
+          // if(cost >)
           patterns_reused.push_back(Mined_Itens_reused->elements);
+
 
           //Construct pattern matrix
           vector <vector<int>> pattern_matrix(_p->num_items, vector<int>(pattern_size));

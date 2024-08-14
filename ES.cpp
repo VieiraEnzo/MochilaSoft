@@ -22,7 +22,7 @@ bool operator<(Solution a, Solution b){
 
 bool ES::add(Solution s){
 
-	if(HeapSol.find(s) != HeapSol.end()) return false;
+	for(auto &sol : HeapSol) if(s.hash == sol.hash) return false;
 
 	if(HeapSol.size() < MaxSize ){
 		HeapSol.insert(s);

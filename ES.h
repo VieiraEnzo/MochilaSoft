@@ -12,7 +12,7 @@ using namespace std;
 
 class ES
 {
-private:
+public:
 	
 	set<Solution> HeapSol;
 	size_t MaxSize;

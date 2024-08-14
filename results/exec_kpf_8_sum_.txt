@@ -1,7 +1,7 @@
 File: Litlle_instance/kpf_8_sum.txt
-Execution Costs: 2546 2550 2545 2548 2551 2547 2543 2546 2546 2547 
-Execution Times: 24.837950 28.309048 25.571676 25.955830 31.535259 28.182383 21.897997 23.986961 26.557369 27.481024 
-Average Cost: 2546.899902
-Average Elapsed Time: 26.431549 seconds
-Best Cost: 2551.000000
-Time: 31.535259
+Execution Costs: 2547 2546 
+Execution Times: 29.129681 22.031523 
+Average Cost: 2546.500000
+Average Elapsed Time: 25.580601 seconds
+Best Cost: 2547.000000
+Time: 29.129681

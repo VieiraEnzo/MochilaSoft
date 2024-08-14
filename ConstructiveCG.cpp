@@ -23,11 +23,11 @@ tempo: O(n)
 int ConstructiveCG::Greedy_Forfeits_Single(ProblemInstance* _p, Solution &solution){
   int best = -1;
 
-  auto change_best = [&](int& a, int b){
-    if(a == -1){
+  auto change_best = [&](int b){
+    if(best == -1){
       best = b;
     }else{
-      double r1 = (double)profits[a]/_p->weights[a];
+      double r1 = (double)profits[best]/_p->weights[best];
       double r2 = (double)profits[b]/_p->weights[b];
       if(r2 > r1){
         best = b;
@@ -37,7 +37,9 @@ int ConstructiveCG::Greedy_Forfeits_Single(ProblemInstance* _p, Solution &soluti
 
   for(int j = 0; j < n; j++){
     if(solution.can_add(j)){
-      change_best(best, j);
+      // cout << "entrouAqui " << j << " " << best << " " << _p->num_items << " " << profits.size() << " " << "\n";
+      change_best(j);
+      // cout << "saiuAQui \n";
     }
   }
 
@@ -50,7 +52,7 @@ int ConstructiveCG::Greedy_Forfeits_Single(ProblemInstance* _p, Solution &soluti
   for(int j = 0; j < n; j++){ //um cara pode ter conflito com ele mesmo?
     profits[j] -= _p->mD[best][j];
   }
-  
+
   return best;
 }; 
 
