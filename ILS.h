@@ -25,7 +25,7 @@ class ILS{
   public:
     ILS(ProblemInstance* _p, int max_iter);
     virtual ~ILS();
-    int solve(ProblemInstance* _p, Solution &solution);
+    int solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &constructive);
 };
 
 #endif /*ILS_H_*/

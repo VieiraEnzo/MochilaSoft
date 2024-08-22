@@ -122,7 +122,7 @@ void ConstructiveCG::Carousel_Forfeits_Adaptive(ProblemInstance* _p, Solution &s
     int carousel_iter = max_iter * solution.get_size();
 
     for(int i = 0; i < carousel_iter; i++){
-        solution.remove_oldest_choice_adaptive(p); 
+        solution.remove_oldest_choice_adaptive(p);
         Greedy_Forfeits_Single(_p, solution);
     }
 

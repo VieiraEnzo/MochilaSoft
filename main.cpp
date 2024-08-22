@@ -53,16 +53,16 @@ std::vector<double> process_file(const string &file_path)
     // ES EliteSet(15);
     ILS ils(p, iter_wo_impr);
     // EliteSet = ils.solve(p, solution);
-    int best_cost = ils.solve(p, solution);
+    int best_cost = ils.solve(p, solution, constructive);
 
     cout << "best cost before LB: " << best_cost << "\n";
     
     assert(solution.CheckSol() == 1);
 
-    // Model kpf_original_model(p);
-    // pair<Solution, double> model = kpf_original_model.Build_Model_with_LB(p, solution.getKS());
-    // Solution best_solution = model.first;
-    // best_cost = model.second;
+    Model kpf_original_model(p);
+    pair<Solution, double> model = kpf_original_model.Build_Model_with_LB(p, solution.getKS());
+    Solution best_solution = model.first;
+    best_cost = model.second;
 
     cout << "new best cost: " << best_cost << "\n";
 

@@ -70,7 +70,7 @@ tempo: O(1)
 */
 bool Solution::is_in_sack(int i){
 
-	return inside[i] == 1;
+	return inside[i];
 	
 }
 
@@ -103,7 +103,6 @@ saida: -
 tempo: O(n)
 */
 void::Solution::add_itemO(int i){
-	// add_item(i);
 	assert(inside[i] == 0);
 	dq.push_back(i);
 	hash += ItemHash[i];
@@ -112,7 +111,7 @@ void::Solution::add_itemO(int i){
 	freq[i]++;
 	num_items_in_sol++;
 
-	// assert(used_capacity <= p->budget);
+	assert(used_capacity <= p->budget);
 
 	cost += p->profits[i];
 	for(int j = 0; j < p->num_items; j++) 
@@ -258,6 +257,7 @@ bool::Solution::CheckSol(){
 	for(int i = 0; i < p->num_items; i++){
 		if(is_in_sack(i)) peso += p->weights[i];
 	}
+	assert(peso == used_capacity);
 	return peso <= p->budget;
 }
 
@@ -294,13 +294,13 @@ void Solution::updateCapacity(){
 void Solution::clear(){
 	
 	CostCalculated = true;
-	hash = 0 ;
+	hash = 0;
     used_capacity = 0;
 	num_items_in_sol = 0;
 	cost = 0;
 	
-	freq.assign(p->num_items, 0);
-	inside.assign(p->num_items, 0);
+	fill(freq.begin(), freq.end(), 0);
+	fill(inside.begin(), inside.end(), 0);
 	dq.clear();
 
 }
@@ -308,10 +308,10 @@ void Solution::clear(){
 void::Solution::remove_oldest_choice_adaptive(double percentage)
 {
     // Step 1: Calculate the number of elements to select based on percentage
-    int numElementsToSelect = static_cast<int>(get_size() * percentage);
+    int numElementsToSelect = (get_size() * percentage);
 
     // Step 2: Ensure numElementsToSelect is within bounds of Sack size
-    numElementsToSelect = min(numElementsToSelect, static_cast<int>(get_size()));
+    numElementsToSelect = min(numElementsToSelect, get_size());
 
     // Step 3: Select the first numElementsToSelect elements from Sack
 	//Subset = (0, numElementsToSelect(
@@ -322,7 +322,6 @@ void::Solution::remove_oldest_choice_adaptive(double percentage)
 		// Random index within subset
 		int randomIndex = rand() % numElementsToSelect; //trocar?
 
-		//Remove Element with that index
 		while(!dq.empty() && (!inside[dq.front()] || freq[dq.front()] > 1)){
 			freq[dq.front()]--;
 			dq.pop_front();
@@ -331,14 +330,14 @@ void::Solution::remove_oldest_choice_adaptive(double percentage)
 		int curIndex = 0;
 		auto it = dq.begin();
 		while(curIndex != randomIndex){
-			auto toRemove = it++;
+			auto toRemove = next(it);
 			while(!dq.empty() && (!inside[*toRemove] || freq[*toRemove] > 1)){
 				freq[*toRemove]--;
 				dq.erase(toRemove);
-				toRemove = it++;
+				toRemove = next(it);
 			}
 			curIndex++;
-			it++;
+			it = next(it);
 		}
 
 		int randomElement = *it;
