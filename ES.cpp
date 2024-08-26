@@ -2,6 +2,7 @@
 #define ES_CPP_
 
 #include "ES.h"
+#include "cassert"
 
 ES::ES(size_t _MaxSize){
 	MaxSize = _MaxSize;
@@ -22,8 +23,16 @@ bool operator<(Solution a, Solution b){
 
 bool ES::add(Solution s){
 
-	for(auto &sol : HeapSol) if(s.hash == sol.hash) return false;
-
+	for(auto sol : HeapSol){ 
+		if(s.hash == sol.hash){
+			set<vector<int>> k;
+			k.insert(s.getKS());
+			k.insert(sol.getKS());
+			assert(k.size() == 1);
+			return false;
+		}
+	}
+	
 	if(HeapSol.size() < MaxSize ){
 		HeapSol.insert(s);
 		return true;

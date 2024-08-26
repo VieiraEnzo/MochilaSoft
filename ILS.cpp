@@ -60,7 +60,7 @@ double hybrid_cauchy_flight_step(int iter, int max_iter, double current_cost, do
         0.0, (best_cost - current_cost) / std::max(std::abs(best_cost), 1e-10)
     );
 
-    double iteration_factor = static_cast<double>(iter) / max_iter;
+    double iteration_factor = (double)(iter) / (double)max_iter;
     scale = (scale) * (1 - iteration_factor) + (improvement_factor * iteration_factor);  
 
     double x = cauchy_rvs(0, scale);  // Random variate (sample)
@@ -94,6 +94,7 @@ void perturbate(
   double flight_step_value;
   if(flight_step == "cauchy"){
     flight_step_value = abs(hybrid_cauchy_flight_step(iter, max_iter, current_cost, best_cost));
+    // flight_step_value = abs(cauchy_flight_step(iter, max_iter));
   }else{
     cout << "Choose a valid flight step." << endl;
     assert(0);
@@ -145,12 +146,8 @@ void getRandomVector(Solution &solution, vector<vector<int>>& vec) {
     }
     
     // Create a random number generator
-    random_device rd;  // Seed generator
-    mt19937 gen(rd()); // Mersenne Twister generator
-    uniform_int_distribution<> dis(0, vec.size() - 1); // Uniform distribution
-
-    // Generate a random index
-    int randomIndex = dis(gen);
+    mt19937 rng((uint32_t)chrono::steady_clock::now().time_since_epoch().count());    
+    int randomIndex = uniform_int_distribution<int>(0, vec.size() - 1)(rng);
 
     // Solutions become the new solution
     for(auto num : vec[randomIndex]){
@@ -158,6 +155,13 @@ void getRandomVector(Solution &solution, vector<vector<int>>& vec) {
       solution.add_itemO(num);
     }
 }
+
+/*
+Diagnostico depois de infinitos testes:
+  -> Versões antigas ainda davam esse erro
+  -> Erro gerado principalmente com um valor de suporte maior (mais provavel de encontrar n_sol < suporte)
+  -> Erro pode acontecer em qualquer iteração do algoritmo (nn tem padrao)
+*/
 
 /*
 faz a iterated local search em uma solução parcial gerada pelo construtivo
@@ -183,7 +187,8 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
 
   //Multstart
   vector<vector<int>> patterns_reused;
-  const int maxStart = 5;
+  const int maxStart = 1;
+  assert(solution.CheckSol());
 
   for(int s=0; s < maxStart; s++){
     
@@ -191,34 +196,44 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
     int iter = 0;
 
     if(s!= 0){
-      
         solution.clear();
         getRandomVector(solution, patterns_reused);
-        double max_iter = 2, pct_rm = 0.05, k = 0.30;
-        constructive.Carousel_Forfeits_Adaptive(p, solution, max_iter, pct_rm, k);
+        const double iterAdapt = 2, pct_rm = 0.05, k = 0.30;
+        constructive.Carousel_Forfeits_Adaptive(p, solution, iterAdapt, pct_rm, k);
         localsearch.solve(p, solution);
         patterns_reused.clear();
         current_cost = solution.getCost();
+        assert(solution.CheckSol());
     }
+
+    vector<Solution> debug;//////////////////////////////////////
 
     while(iter < iter_wo_impr){
       iter++;
       string flight_step = "cauchy"; 
-      perturbate(solution, _p, iter, iter_wo_impr, flight_step, current_cost, best_cost); 
+      perturbate(solution, _p, iter, iter_wo_impr, flight_step, current_cost, best_cost);
       localsearch.solve(_p, solution);
 
       current_cost = solution.getCost();
 
       no_change += 1;
       if(EliteSet->add(solution)){
+        assert(solution.CheckSol());
         no_change = 0;
+      }else{
+        debug.push_back(solution);////////////////////////////////////
       }
 
       assert(no_change <= 15);
       if(no_change == 15){
         no_change = 0;
 
-        const int suporte = (0.01 * (double)_p->num_items);
+        for(auto sol : (*EliteSet).HeapSol){
+          assert(sol.CheckSol());
+        }
+
+        const int suporte = 0.01 * (double)_p->num_items;
+        // const int suporte = 2; 
         Mining miner(*EliteSet, suporte, 15);
         miner.map_file();
         miner.mine();
@@ -226,8 +241,46 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
         Pattern **Mined_Patterns = miner.getlistOfPatterns();
         int pattern_size = miner.getSizePatterns();
 
-        mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-        uniform_int_distribution<int> dis(0, pattern_size-1);
+        // mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+        // uniform_int_distribution<int> dis(0, pattern_size-1);
+        if(pattern_size == 0){
+          cout << "Iter valur: " << iter << "\n";
+          cout << "iteration s: " << s << "\n";
+          cout << "soltuion size: " << solution.get_size() << "\n";
+          cout << "suporte: " << suporte << "\n";
+          cout << "EliteSetSiz: " << (*EliteSet).getESsize() << "\n"; 
+          for(auto a : (*EliteSet).HeapSol){
+            cout << "Solution: ++++++++++++++\n";
+            for(auto b : a.getKS()){
+              cout << b << " ";
+            }
+            cout << "\n";
+          }
+
+          cout << "-----DEBUG----\n";
+          cout << "debugSize: " << debug.size() << "\n";
+          set<vector<int>> k;
+          for(auto S : debug){
+            k.insert(S.getKS());
+          }
+          cout << "diferentSolutions: " << k.size() << "\n";
+          bool verdade = true;
+          for(auto S : debug){
+            bool igualAlgue = false; 
+            for(auto p : (*EliteSet).HeapSol){
+              if(S.getKS() == p.getKS()){
+                igualAlgue = true;
+              }
+            }
+            if(igualAlgue == false) verdade = false;
+          }
+          cout << "Todos no debug nn estão no ES: " << verdade << "\n";
+
+          exit(1);
+        }
+
+        debug.clear();//////////////////////////////
+
         int randPos = rand()%pattern_size;
         Pattern *Mined_Itens_reused = Mined_Patterns[randPos];
         patterns_reused.push_back(Mined_Itens_reused->elements); 
