@@ -151,7 +151,6 @@ void getRandomVector(Solution &solution, vector<vector<int>>& vec) {
 
     // Solutions become the new solution
     for(auto num : vec[randomIndex]){
-      assert(solution.can_add(num));
       solution.add_itemO(num);
     }
 }
@@ -173,7 +172,9 @@ saída:
 tempo: O(#total de iterações) * O(perturbate)
 */
 int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &constructive){
-  Solution best_sol(_p); 
+  Solution best_sol(_p);
+
+  // std::chrono::duration<double> total_duration = std::chrono::duration<double>::zero();
 
   LocalSearch localsearch(p); 
   localsearch.solve(p, solution);
@@ -187,8 +188,7 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
 
   //Multstart
   vector<vector<int>> patterns_reused;
-  const int maxStart = 1;
-  assert(solution.CheckSol());
+  const int maxStart = 5;
 
   for(int s=0; s < maxStart; s++){
     
@@ -203,10 +203,7 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
         localsearch.solve(p, solution);
         patterns_reused.clear();
         current_cost = solution.getCost();
-        assert(solution.CheckSol());
     }
-
-    vector<Solution> debug;//////////////////////////////////////
 
     while(iter < iter_wo_impr){
       iter++;
@@ -218,73 +215,29 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
 
       no_change += 1;
       if(EliteSet->add(solution)){
-        assert(solution.CheckSol());
         no_change = 0;
-      }else{
-        debug.push_back(solution);////////////////////////////////////
       }
 
       assert(no_change <= 15);
       if(no_change == 15){
         no_change = 0;
 
-        for(auto sol : (*EliteSet).HeapSol){
-          assert(sol.CheckSol());
-        }
-
-        const int suporte = 0.01 * (double)_p->num_items;
-        // const int suporte = 2; 
+        const int suporte = min((int)(0.01*(double)_p->num_items), (int) (*EliteSet).getESsize());
+        // auto start = std::chrono::high_resolution_clock::now();
         Mining miner(*EliteSet, suporte, 15);
         miner.map_file();
         miner.mine();
         miner.unmapall_file();
         Pattern **Mined_Patterns = miner.getlistOfPatterns();
+        // auto end = std::chrono::high_resolution_clock::now();
+        // std::chrono::duration<double> duration = end - start;
+        // total_duration += duration;
+
         int pattern_size = miner.getSizePatterns();
-
-        // mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-        // uniform_int_distribution<int> dis(0, pattern_size-1);
-        if(pattern_size == 0){
-          cout << "Iter valur: " << iter << "\n";
-          cout << "iteration s: " << s << "\n";
-          cout << "soltuion size: " << solution.get_size() << "\n";
-          cout << "suporte: " << suporte << "\n";
-          cout << "EliteSetSiz: " << (*EliteSet).getESsize() << "\n"; 
-          for(auto a : (*EliteSet).HeapSol){
-            cout << "Solution: ++++++++++++++\n";
-            for(auto b : a.getKS()){
-              cout << b << " ";
-            }
-            cout << "\n";
-          }
-
-          cout << "-----DEBUG----\n";
-          cout << "debugSize: " << debug.size() << "\n";
-          set<vector<int>> k;
-          for(auto S : debug){
-            k.insert(S.getKS());
-          }
-          cout << "diferentSolutions: " << k.size() << "\n";
-          bool verdade = true;
-          for(auto S : debug){
-            bool igualAlgue = false; 
-            for(auto p : (*EliteSet).HeapSol){
-              if(S.getKS() == p.getKS()){
-                igualAlgue = true;
-              }
-            }
-            if(igualAlgue == false) verdade = false;
-          }
-          cout << "Todos no debug nn estão no ES: " << verdade << "\n";
-
-          exit(1);
-        }
-
-        debug.clear();//////////////////////////////
 
         int randPos = rand()%pattern_size;
         Pattern *Mined_Itens_reused = Mined_Patterns[randPos];
         patterns_reused.push_back(Mined_Itens_reused->elements); 
-        assert(patterns_reused.size() > 0);
 
         vector <vector<int>> pattern_matrix(_p->num_items, vector<int>(pattern_size));
         for(int i = 0; i < pattern_size; i++){
@@ -308,7 +261,7 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
         solution = model_result.first;
         current_cost = model_result.second;
 
-        if(current_cost == 0){ // Infeasible
+        if(current_cost == 0){ 
             solution = best_sol;
             current_cost = best_cost;
         }
@@ -328,6 +281,6 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
     }
   }
   solution = best_sol;
-  assert(solution.CheckSol() && 1);
+  // cout << "total time mining: " << total_duration.count() << "\n";
   return best_cost;
 }

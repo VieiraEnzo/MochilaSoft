@@ -69,9 +69,7 @@ saida: booleado se o item está na solução
 tempo: O(1)
 */
 bool Solution::is_in_sack(int i){
-
 	return inside[i];
-	
 }
 
 /*
@@ -91,8 +89,6 @@ void Solution::add_item(int i){
 	CostCalculated = false;
 
 	assert(used_capacity <= p->budget);
-
-	// cout << "Adicionou " << i << "\n";
 
 }
 

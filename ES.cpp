@@ -25,10 +25,6 @@ bool ES::add(Solution s){
 
 	for(auto sol : HeapSol){ 
 		if(s.hash == sol.hash){
-			set<vector<int>> k;
-			k.insert(s.getKS());
-			k.insert(sol.getKS());
-			assert(k.size() == 1);
 			return false;
 		}
 	}

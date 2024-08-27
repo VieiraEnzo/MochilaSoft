@@ -60,10 +60,10 @@ std::vector<double> process_file(const string &file_path)
     assert(solution.CheckSol() == 1);
 
     //Acredito que sem a limitação de 180 segundos
-    // Model kpf_original_model(p);
-    // pair<Solution, double> model = kpf_original_model.Build_Model_with_LB(p, solution.getKS());
-    // Solution best_solution = model.first;
-    // best_cost = model.second;
+    Model kpf_original_model(p);
+    pair<Solution, double> model = kpf_original_model.Build_Model_with_LB(p, solution.getKS());
+    Solution best_solution = model.first;
+    best_cost = model.second;
 
     cout << "new best cost: " << best_cost << "\n";
 
