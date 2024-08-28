@@ -102,7 +102,7 @@ int main(int argc, char *argv[]){
         if (entry.is_regular_file())
         {   
 
-            int NUM_EXEC = 2;
+            int NUM_EXEC = 10;
             vector<float> costs;
             vector<float> times;
 
