@@ -55,7 +55,7 @@ std::vector<double> process_file(const string &file_path)
     // EliteSet = ils.solve(p, solution);
     int best_cost = ils.solve(p, solution, constructive);
 
-    cout << "best cost before LB: " << best_cost << "\n";
+    // cout << "best cost before LB: " << best_cost << "\n";
     
     assert(solution.CheckSol() == 1);
 
@@ -65,7 +65,7 @@ std::vector<double> process_file(const string &file_path)
     Solution best_solution = model.first;
     best_cost = model.second;
 
-    cout << "new best cost: " << best_cost << "\n";
+    // cout << "new best cost: " << best_cost << "\n";
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> time_taken = end - start;
@@ -127,12 +127,11 @@ int main(int argc, char *argv[]){
 
                     cout << "Executing " << i << " for " << entry.path().string() << "..."  << endl;
                     vector<double> a =  process_file(entry.path().string());
-                    double cost = a[0], time_taken = a[1], forfeitPairs = a[2]; 
+                    double cost = a[0], time_taken = a[1];
                     costs.push_back(cost);
                     times.push_back(time_taken);
                     total_cost += cost;
                     total_time += time_taken;
-                    // outfile << "Number of Forfeit Pairs = " << forfeitPairs << endl;
 
                 }
 
