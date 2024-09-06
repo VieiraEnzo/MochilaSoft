@@ -55,11 +55,10 @@ std::vector<double> process_file(const string &file_path)
     // EliteSet = ils.solve(p, solution);
     int best_cost = ils.solve(p, solution, constructive);
 
-    // cout << "best cost before LB: " << best_cost << "\n";
+    cout << "best cost before LB: " << best_cost << "\n";
     
     assert(solution.CheckSol() == 1);
 
-    //Acredito que sem a limitação de 180 segundos
     Model kpf_original_model(p);
     pair<Solution, double> model = kpf_original_model.Build_Model_with_LB(p, solution.getKS());
     Solution best_solution = model.first;

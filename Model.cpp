@@ -346,7 +346,7 @@ std::pair<Solution, double> Model::Build_Model_with_LB(ProblemInstance* _p, vect
         
 
         knapsack = IloCplex(model);
-        int timelimit = 180;
+        int timelimit = 120;
         knapsack.setParam(IloCplex::Param::TimeLimit,timelimit);
 
         // Set the memory emphasis parameter to true to reduce memory usage

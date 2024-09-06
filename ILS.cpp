@@ -155,18 +155,29 @@ void getRandomVector(Solution &solution, vector<vector<int>>& vec) {
     }
 }
 
-void acceptance_criteria(Solution &solution_candidate, Solution &solution_current, int &k, Solution &best_solution, int &local_best){
-  cout << "solution candidate cost: " << solution_candidate.cost << endl; 
-  cout << "solution current cost: " << solution_current.cost << endl; 
-
-  local_best += 1; 
+void acceptance_criteria(Solution &solution_candidate, Solution &solution_current, int &k, Solution &best_solution, int &local_best, 
+                         ProblemInstance* _p, int iter, int max_iter, string &flight_step){
+  int c2 = 13;  
+  int c3 = 1; 
 
   if(solution_candidate.getCost() > solution_current.getCost()){
     k = 1; 
     solution_current = solution_candidate;
     if (local_best < solution_current.getCost()){
-      k = k - solution_current.get_size(); 
+      k -= solution_current.get_size()/c2;
+      local_best = solution_current.getCost();  
+    }
+
+    if(best_solution.getCost() < solution_current.getCost()){
+      best_solution = solution_current; 
+      k -= solution_current.get_size() * c3;
     } 
+  }else if (k <= solution_current.get_size() / c2) {
+    k++;
+  } else {
+    local_best = solution_current.getCost();
+    perturbate(solution_current, _p, iter, max_iter, flight_step, local_best, best_solution.getCost()); 
+    k = 1;
   }
 }
 
@@ -186,7 +197,7 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
 
   std::unique_ptr<ES> EliteSet = std::make_unique<ES>(15);
 
-  //Multstart
+  //Multistart
   vector<vector<int>> patterns_reused;
   const int maxStart = 5;
 
@@ -206,7 +217,7 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
     }
 
     int k = 1; 
-    int local_best = 2; 
+    int local_best = current_cost;   
     while(iter < iter_wo_impr){
       iter++;
       string flight_step = "cauchy"; 
@@ -275,17 +286,18 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
         
       }
 
-      acceptance_criteria(s_cand, solution, k, best_sol, local_best);
+      acceptance_criteria(s_cand, solution, k, best_sol, local_best, _p, iter, iter_wo_impr, flight_step);
+      best_cost = best_sol.getCost(); 
+      
 
-      if(current_cost > best_cost){
-        best_sol = s_cand; 
-        best_cost = current_cost;
-        iter = 0; 
-      }
+      // if(current_cost > best_cost){
+      //   best_sol = s_cand; 
+      //   best_cost = current_cost;
+      //   iter = 0; 
+      // }
 
     }
   }
   solution = best_sol;
-  // cout << "total time mining: " << total_duration.count() << "\n";
   return best_cost;
 }
