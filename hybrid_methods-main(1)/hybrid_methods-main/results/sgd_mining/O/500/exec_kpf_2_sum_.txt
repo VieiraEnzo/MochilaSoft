@@ -1,7 +1,0 @@
-File: sum_instances/O/500/kpf_2_sum.txt
-Execution Costs: 2537 2560 2545 2576 2535 2548 2555 2523 2584 2516 
-Execution Times: 3.479572 5.668165 3.717129 3.762359 3.750717 3.868706 4.736166 3.647261 3.109195 3.310550 
-Average Cost: 2547.899902
-Average Elapsed Time: 3.904982 seconds
-Best Cost: 2584.000000
-Time: 3.109195
