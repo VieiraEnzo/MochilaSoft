@@ -155,33 +155,22 @@ void getRandomVector(Solution &solution, vector<vector<int>>& vec) {
     }
 }
 
-void acceptance_criteria(Solution &solution_candidate, Solution &solution_current, int &k, Solution &best_solution, int &local_best, 
-                         ProblemInstance* _p, int iter, int max_iter, string &flight_step){
-  int c2 = 13;  
-  int c3 = 1; 
+/*
+Diagnostico depois de infinitos testes:
+  -> Versões antigas ainda davam esse erro
+  -> Erro gerado principalmente com um valor de suporte maior (mais provavel de encontrar n_sol < suporte)
+  -> Erro pode acontecer em qualquer iteração do algoritmo (nn tem padrao)
+*/
 
-  if(solution_candidate.getCost() > solution_current.getCost()){
-    k = 1; 
-    solution_current = solution_candidate;
-    if (local_best < solution_current.getCost()){
-      k -= solution_current.get_size()/c2;
-      local_best = solution_current.getCost();  
-    }
-
-    if(best_solution.getCost() < solution_current.getCost()){
-      best_solution = solution_current; 
-      k -= solution_current.get_size() * c3;
-    } 
-  }else if (k <= solution_current.get_size() / c2) {
-    k++;
-  } else {
-    local_best = solution_current.getCost();
-    perturbate(solution_current, _p, iter, max_iter, flight_step, local_best, best_solution.getCost()); 
-    k = 1;
-  }
-}
-
-
+/*
+faz a iterated local search em uma solução parcial gerada pelo construtivo
+entrada:
+- instância do problema
+- solução parcial
+saída:
+- custo da melhor solução encontrada
+tempo: O(#total de iterações) * O(perturbate)
+*/
 int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &constructive){
   Solution best_sol(_p);
 
@@ -197,7 +186,7 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
 
   std::unique_ptr<ES> EliteSet = std::make_unique<ES>(15);
 
-  //Multistart
+  //Multstart
   vector<vector<int>> patterns_reused;
   const int maxStart = 5;
 
@@ -216,19 +205,16 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
         current_cost = solution.getCost();
     }
 
-    int k = 1; 
-    int local_best = current_cost;   
     while(iter < iter_wo_impr){
       iter++;
       string flight_step = "cauchy"; 
-      Solution s_cand = solution; 
-      perturbate(s_cand, _p, iter, iter_wo_impr, flight_step, current_cost, best_cost);
-      localsearch.solve(_p, s_cand);
+      perturbate(solution, _p, iter, iter_wo_impr, flight_step, current_cost, best_cost);
+      localsearch.solve(_p, solution);
 
-      current_cost = s_cand.getCost();
+      current_cost = solution.getCost();
 
       no_change += 1;
-      if(EliteSet->add(s_cand)){
+      if(EliteSet->add(solution)){
         no_change = 0;
       }
 
@@ -272,11 +258,11 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
 
         Model kpf_model(_p);
         pair<Solution, int> model_result = kpf_model.Build_Model_with_Patterns(_p, pattern_size, pattern_matrix, elements, best_cost);//,best_cost
-        s_cand = model_result.first;
+        solution = model_result.first;
         current_cost = model_result.second;
 
         if(current_cost == 0){ 
-            s_cand = best_sol;
+            solution = best_sol;
             current_cost = best_cost;
         }
       
@@ -286,18 +272,15 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
         
       }
 
-      acceptance_criteria(s_cand, solution, k, best_sol, local_best, _p, iter, iter_wo_impr, flight_step);
-      best_cost = best_sol.getCost(); 
-      
-
-      // if(current_cost > best_cost){
-      //   best_sol = s_cand; 
-      //   best_cost = current_cost;
-      //   iter = 0; 
-      // }
+      if(current_cost > best_cost){
+        best_sol = solution; 
+        best_cost = current_cost;
+        iter = 0; 
+      }
 
     }
   }
   solution = best_sol;
+  // cout << "total time mining: " << total_duration.count() << "\n";
   return best_cost;
 }
