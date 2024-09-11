@@ -41,19 +41,19 @@ saída:
 - #itens que serão removidos
 tempo: O(1)
 */
-double cauchy_flight_step(int iter, int max_iter) {
-  double initial_scale = 1.0;
-  double final_scale = 0.1;
-  double progress = iter / max_iter;
-  double scale = initial_scale * progress + final_scale * (1 - progress);
-  double x = cauchy_rvs(0, scale);  // Random variate (sample)
-  return cauchy_pdf(x, 0, scale);
-}
+// double cauchy_flight_step(int iter, int max_iter) {
+//   double initial_scale = 1.0;
+//   double final_scale = 0.1;
+//   double progress = iter / max_iter;
+//   double scale = initial_scale * progress + final_scale * (1 - progress);
+//   double x = cauchy_rvs(0, scale);  // Random variate (sample)
+//   return cauchy_pdf(x, 0, scale);
+// }
 
 double hybrid_cauchy_flight_step(int iter, int max_iter, double current_cost, double best_cost) { 
     double initial_scale = 1.0;
     double final_scale = 0.1;
-    double progress = iter / max_iter;
+    double progress = (double)iter / max_iter;
     double scale = initial_scale * progress + final_scale * (1 - progress);
 
     double improvement_factor = std::max(
