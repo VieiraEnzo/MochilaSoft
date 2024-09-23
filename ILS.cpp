@@ -240,12 +240,17 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
         patterns_reused.push_back(Mined_Itens_reused->elements); 
 
         vector <vector<int>> pattern_matrix(_p->num_items, vector<int>(pattern_size));
+        cout << "\n========== model called =========="<<endl; 
         for(int i = 0; i < pattern_size; i++){
+          cout << "pattern " << i << ": "; 
           Pattern *Mined_Items = Mined_Patterns[i];
           for(int tmp : Mined_Items->elements){
+            cout << tmp << " "; 
             pattern_matrix[tmp][i] = 1;
           }
+          cout << "\n";
         }
+        cout << "\n\n"; 
 
         vector <int> elements;
         int num = 0;
