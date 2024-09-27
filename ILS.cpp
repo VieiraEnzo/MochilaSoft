@@ -191,6 +191,7 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
   const int maxStart = 5;
 
   for(int s=0; s < maxStart; s++){
+    cout << "multistart: " << s << endl; 
     
     int no_change = 0;
     int iter = 0;
@@ -205,11 +206,24 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
         current_cost = solution.getCost();
     }
 
+    cout << "====>> Solution after construction: " << solution.getCost() << endl; 
+    int const_cost = solution.getCost(); 
+
     while(iter < iter_wo_impr){
       iter++;
       string flight_step = "cauchy"; 
       perturbate(solution, _p, iter, iter_wo_impr, flight_step, current_cost, best_cost);
+      // cout << "Solution after pertubation: " << solution.getCost() << endl; 
+
       localsearch.solve(_p, solution);
+      // cout << "Solution after local search: " << solution.getCost() << endl; 
+
+      if(solution.getCost() > const_cost){
+        cout << "improved in pertubation: " << solution.getCost() << endl; 
+      }
+
+
+
 
       current_cost = solution.getCost();
 
@@ -240,17 +254,17 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
         patterns_reused.push_back(Mined_Itens_reused->elements); 
 
         vector <vector<int>> pattern_matrix(_p->num_items, vector<int>(pattern_size));
-        cout << "\n========== model called =========="<<endl; 
+        // cout << "\n========== model called =========="<<endl; 
         for(int i = 0; i < pattern_size; i++){
-          cout << "pattern " << i << ": "; 
+          // cout << "pattern " << i << ": "; 
           Pattern *Mined_Items = Mined_Patterns[i];
           for(int tmp : Mined_Items->elements){
-            cout << tmp << " "; 
+            // cout << tmp << " "; 
             pattern_matrix[tmp][i] = 1;
           }
-          cout << "\n";
+          // cout << "\n";
         }
-        cout << "\n\n"; 
+        // cout << "\n\n"; 
 
         vector <int> elements;
         int num = 0;
