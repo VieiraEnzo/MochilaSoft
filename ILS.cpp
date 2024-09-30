@@ -270,17 +270,19 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
       if(no_change == 15){
         
         // Elite Set solution cost
-        vector<Solution> conj;
-        conj.reserve(EliteSet->getConjSol().size()); // Reserve memory for efficiency
+        vector<Solution> elite_set_solutions;
+        elite_set_solutions.reserve(EliteSet->getConjSol().size()); // Reserve memory for efficiency
         for (const auto& s : EliteSet->getConjSol()) {
-            conj.push_back(s); // Add each solution to the vector
+            elite_set_solutions.push_back(s); // Add each solution to the vector
         }
 
         cout << "Elite set solutions cost: "; 
-        for(const auto& elite_set_solution: conj){
-          cout << " " << elite_set_solution.cost; 
+        for(const auto& e_solution: elite_set_solutions){
+          cout << " " << e_solution.cost; 
         }
         cout << endl; 
+
+        // elite_set_solutions[] // pegar o último padrão que tem o melhor custo e colocar para resolver o modelo, depois que ele estagnar. 
 
         no_change = 0;
         cout << "Cost before mining: " << solution.getCost() << endl; 
@@ -330,8 +332,6 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
 
         cout << "Cost after mining: " << current_cost << endl; 
 
-        
-
         if(current_cost == 0){ 
             solution = best_sol;
             current_cost = best_cost;
@@ -349,19 +349,35 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
         iter = 0;
         cout << "best cost: " << best_cost << endl; 
         stag = 0;  
+        EliteSet->add(best_sol); 
       }else{
         stag++; 
       }
 
-      if(stag > 200){
-        // cout << "============> 100 iterations without find best!" << endl; 
-        perturbate_2(solution, _p, iter, iter_wo_impr, flight_step, current_cost, best_cost);
-        // se fica estagnada posso acrescentar uma solução perturbada no Elite set. E perturbar a solução vigente
-        cout << "perturbed solution cost: " << solution.getCost() << endl;
-        EliteSet->add(solution);  // provavelmente vai ser retirada do pool de soluções. 
-      }
 
+      // if(stag > 500){
+      //   cout << "============> 500 iterations without finding best!" << endl; 
+      //   Model kpf_model(_p);
+      //   vector <int> elements;
+      //   int num = 0;
+      //   for(bool tmp : best_sol.inside){
+      //     if(tmp == 1){
+      //       elements.push_back(num);
+      //     }
+      //     num += 1;
+      //   }
+      //   pair<Solution, int> model_result = kpf_model.Build_Model(_p, elements);
+      //   solution = model_result.first;
+      //   current_cost = model_result.second;
 
+      //   if(current_cost > best_cost){
+      //     best_sol = solution; 
+      //     best_cost = current_cost;
+      //     iter = 0;
+      //     cout << "best cost found inside stag: " << best_cost << endl; 
+      //     stag = 0;  
+      //   }
+      // }
     }
   }
   solution = best_sol;
