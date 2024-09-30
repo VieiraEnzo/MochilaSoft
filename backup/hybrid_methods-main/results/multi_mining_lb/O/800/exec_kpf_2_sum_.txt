@@ -1,1 +1,0 @@
-File: instances_test/kpf_2_sum.txt

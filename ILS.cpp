@@ -82,6 +82,42 @@ entrada:
 saída: -
 tempo: O(n * #itens removidos) ou O(#itens removidos)
 */
+
+void perturbate_2(
+  Solution &solution,
+  ProblemInstance* _p,
+  int iter,
+  int max_iter,
+  string &flight_step,
+  int current_cost,
+  int best_cost
+) {
+
+  mt19937 rng((uint32_t)chrono::steady_clock::now().time_since_epoch().count());
+  auto get_random = [&](int l, int r){
+    return uniform_int_distribution<int>(l, r)(rng);    
+  };
+
+  int n = _p->num_items;
+  // int amnt_chg = max(1, (int)flight_step_value);
+  int amnt_chg = 5;
+  // cout << "change amount: " << amnt_chg << endl; 
+  for(int i = 0; i < amnt_chg; i++){
+    vector <int> can_rem;
+    for(int i = 0; i < n; i++){
+      if(solution.is_in_sack(i)){
+        can_rem.push_back(i);
+      }
+    }
+    if(can_rem.size() > 0){
+      int id = get_random(0, can_rem.size()-1);
+      id = can_rem[id];
+      solution.remove_itemO(id); //remover em O(1) ou O(n)?
+    }
+  }
+  
+}
+
 void perturbate(
   Solution &solution,
   ProblemInstance* _p,
@@ -93,8 +129,8 @@ void perturbate(
 ) {
   double flight_step_value;
   if(flight_step == "cauchy"){
-    flight_step_value = abs(hybrid_cauchy_flight_step(iter, max_iter, current_cost, best_cost));
-    // flight_step_value = abs(cauchy_flight_step(iter, max_iter));
+    // flight_step_value = abs(hybrid_cauchy_flight_step(iter, max_iter, current_cost, best_cost));
+    flight_step_value = abs(cauchy_flight_step(iter, max_iter));
   }else{
     cout << "Choose a valid flight step." << endl;
     assert(0);
@@ -107,6 +143,8 @@ void perturbate(
 
   int n = _p->num_items;
   int amnt_chg = max(1, (int)flight_step_value);
+  // int amnt_chg = 6;
+  // cout << "change amount: " << amnt_chg << endl; 
   for(int i = 0; i < amnt_chg; i++){
     int type = get_random(0, 1);
     if(type == add){
@@ -188,7 +226,7 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
 
   //Multstart
   vector<vector<int>> patterns_reused;
-  const int maxStart = 5;
+  const int maxStart = 7;
 
   for(int s=0; s < maxStart; s++){
     
@@ -198,12 +236,18 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
     if(s!= 0){
         solution.clear();
         getRandomVector(solution, patterns_reused);
-        const double iterAdapt = 2, pct_rm = 0.05, k = 0.30;
-        constructive.Carousel_Forfeits_Adaptive(p, solution, iterAdapt, pct_rm, k);
+        // const double iterAdapt = 2, pct_rm = 0.05, k = 0.30;
+        // constructive.Carousel_Forfeits_Adaptive(p, solution, iterAdapt, pct_rm, k);
+        constructive.Carousel_Forfeits(p, solution, 2, 0.05);
         localsearch.solve(p, solution);
         patterns_reused.clear();
         current_cost = solution.getCost();
     }
+
+    int construct_cost = solution.getCost(); 
+    cout << "========>>> Cost after construction: " << solution.getCost() << endl; 
+
+    int stag = 0; 
 
     while(iter < iter_wo_impr){
       iter++;
@@ -211,17 +255,35 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
       perturbate(solution, _p, iter, iter_wo_impr, flight_step, current_cost, best_cost);
       localsearch.solve(_p, solution);
 
-      current_cost = solution.getCost();
+      // if(solution.getCost() >  construct_cost){
+      //   cout << "improved after perturb" << "at " <<  iter << ": " << solution.getCost() << endl; 
+      // }
+      current_cost = solution.getCost(); // do not remove!
 
       no_change += 1;
       if(EliteSet->add(solution)){
         no_change = 0;
+        // cout << "Added Solution Cost: " << solution.getCost() << endl; 
       }
 
       assert(no_change <= 15);
       if(no_change == 15){
-        no_change = 0;
+        
+        // Elite Set solution cost
+        vector<Solution> conj;
+        conj.reserve(EliteSet->getConjSol().size()); // Reserve memory for efficiency
+        for (const auto& s : EliteSet->getConjSol()) {
+            conj.push_back(s); // Add each solution to the vector
+        }
 
+        cout << "Elite set solutions cost: "; 
+        for(const auto& elite_set_solution: conj){
+          cout << " " << elite_set_solution.cost; 
+        }
+        cout << endl; 
+
+        no_change = 0;
+        cout << "Cost before mining: " << solution.getCost() << endl; 
         const int suporte = min((int)(0.01*(double)_p->num_items), (int) (*EliteSet).getESsize());
         // auto start = std::chrono::high_resolution_clock::now();
         Mining miner(*EliteSet, suporte, 15);
@@ -240,17 +302,17 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
         patterns_reused.push_back(Mined_Itens_reused->elements); 
 
         vector <vector<int>> pattern_matrix(_p->num_items, vector<int>(pattern_size));
-        cout << "\n========== model called =========="<<endl; 
+        // cout << "\n========== model called =========="<<endl; 
         for(int i = 0; i < pattern_size; i++){
-          cout << "pattern " << i << ": "; 
+          // cout << "pattern " << i << ": "; 
           Pattern *Mined_Items = Mined_Patterns[i];
           for(int tmp : Mined_Items->elements){
-            cout << tmp << " "; 
+            // cout << tmp << " "; 
             pattern_matrix[tmp][i] = 1;
           }
-          cout << "\n";
+          // cout << "\n";
         }
-        cout << "\n\n"; 
+        // cout << "\n\n"; 
 
         vector <int> elements;
         int num = 0;
@@ -262,26 +324,43 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
         }
 
         Model kpf_model(_p);
-        pair<Solution, int> model_result = kpf_model.Build_Model_with_Patterns(_p, pattern_size, pattern_matrix, elements, best_cost);//,best_cost
+        pair<Solution, int> model_result = kpf_model.Build_Model_with_Patterns(_p, pattern_size, pattern_matrix, elements, best_cost);
         solution = model_result.first;
         current_cost = model_result.second;
+
+        cout << "Cost after mining: " << current_cost << endl; 
+
+        
 
         if(current_cost == 0){ 
             solution = best_sol;
             current_cost = best_cost;
         }
       
+        EliteSet.reset(nullptr);
+        EliteSet = make_unique<ES>(15);
 
-        EliteSet = std::make_unique<ES>(15);
-
-        
       }
+
 
       if(current_cost > best_cost){
         best_sol = solution; 
         best_cost = current_cost;
-        iter = 0; 
+        iter = 0;
+        cout << "best cost: " << best_cost << endl; 
+        stag = 0;  
+      }else{
+        stag++; 
       }
+
+      if(stag > 200){
+        // cout << "============> 100 iterations without find best!" << endl; 
+        perturbate_2(solution, _p, iter, iter_wo_impr, flight_step, current_cost, best_cost);
+        // se fica estagnada posso acrescentar uma solução perturbada no Elite set. E perturbar a solução vigente
+        cout << "perturbed solution cost: " << solution.getCost() << endl;
+        EliteSet->add(solution);  // provavelmente vai ser retirada do pool de soluções. 
+      }
+
 
     }
   }

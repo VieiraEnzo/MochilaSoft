@@ -215,7 +215,7 @@ std::pair<Solution, int> Model::Build_Model_with_Patterns(ProblemInstance* _p, i
         // int timelimit = 30;  
         // knapsack.setParam(IloCplex::Param::TimeLimit,timelimit);
         knapsack.setOut(outfile);
-        // setMIPstart(best_solution, knapsack, x, _p); 
+        setMIPstart(best_solution, knapsack, x, _p); 
         // knapsack.exportModel("KPFModel.lp");
         // cplex.extract(model); 
 
