@@ -30,6 +30,17 @@ void Model::setMIPstart(vector<int> &solution, IloCplex &cplex, IloBoolVarArray 
 
     vector<int> bin_solution = convertToBinaryVector(solution, _p); 
 
+    // Solution mip_solution(_p); 
+
+    // cout << "mip_start solution: " << endl;
+    // for(const auto i: solution){
+    //     cout << solution[i] << " "; 
+    //     mip_solution.add_item(i);
+    // }
+    // cout << endl; 
+
+    // cout << "mip_start solution cost: " << mip_solution.getCost() << endl; 
+
     for (int i=0;i<_p->num_items;++i){ 		 		
         solvalx[i] = bin_solution[i]; 	
     }  
@@ -45,7 +56,7 @@ void Model::setMIPstart(vector<int> &solution, IloCplex &cplex, IloBoolVarArray 
     startVar.end();
 }
 
-void Model::addObjective(IloEnv &env, IloModel &model, IloBoolVarArray &x, IloNumVarArray &v, ProblemInstance* _p){
+void Model::addObjective(IloEnv &env, IloModel &model, IloBoolVarArray &x, IloBoolVarArray &v, ProblemInstance* _p){
     IloExpr summation(env);
     for(int i=0;i<_p->num_items;++i){
         summation += _p->profits[i]*x[i];
@@ -71,7 +82,7 @@ void Model::addConstraintTotalCapacity(IloEnv &env,IloModel &model,IloBoolVarArr
     model.add(total_capacity); 
 }
 
-void Model::addConstraintLinearization(IloEnv &env,IloModel &model, IloBoolVarArray &x, IloNumVarArray &v, ProblemInstance* _p){
+void Model::addConstraintLinearization(IloEnv &env,IloModel &model, IloBoolVarArray &x, IloBoolVarArray &v, ProblemInstance* _p){
     int idx_pair = 0;
     for (const auto& pair : _p->forfeits_pairs) {
         model.add(IloRange(env, -IloInfinity, x[pair.first] + x[pair.second] - v[idx_pair], 1, "linearizationConstraint")); 
@@ -138,7 +149,7 @@ void Model::addConstraintLocalBranching(IloEnv &env,IloModel &model,IloBoolVarAr
 }
 
 
-void Model::addConstraintImprSol(IloEnv &env, IloModel &model, IloBoolVarArray &x, IloNumVarArray &v, ProblemInstance* _p, int best_value){
+void Model::addConstraintImprSol(IloEnv &env, IloModel &model, IloBoolVarArray &x, IloBoolVarArray &v, ProblemInstance* _p, int best_value){
     IloExpr summation(env);
     for(int i=0;i<_p->num_items;++i){
         summation += _p->profits[i]*x[i];
@@ -174,8 +185,8 @@ std::pair<Solution, int> Model::Build_Model_with_Patterns(ProblemInstance* _p, i
             model.add(x[i]);
         }
 
-
-        v = IloNumVarArray(env, _p->num_forfeits_pairs, 0.0, 1.0, IloNumVar::Float);
+        IloBoolVarArray v(env, _p->num_forfeits_pairs); 
+        // v = IloNumVarArray(env, _p->num_forfeits_pairs, 0.0, 1.0, IloNumVar::Float);
 
         for (int k = 0; k < p->num_forfeits_pairs ; ++k){
             stringstream varv;
@@ -185,9 +196,6 @@ std::pair<Solution, int> Model::Build_Model_with_Patterns(ProblemInstance* _p, i
         }
 
         IloBoolVarArray z(env, num_patterns); 
-
-        // z = IloNumVarArray(env, num_patterns, 0, 1, IloNumVar::Bool); 
-
         
         for (int p = 0; p < num_patterns; ++p){
             stringstream varz;
@@ -216,7 +224,7 @@ std::pair<Solution, int> Model::Build_Model_with_Patterns(ProblemInstance* _p, i
         knapsack.setParam(IloCplex::Param::TimeLimit,timelimit);
         knapsack.setOut(outfile);
         setMIPstart(best_solution, knapsack, x, _p); 
-        // knapsack.exportModel("KPFModel.lp");
+        // knapsack.exportModel("KPFModel_patterns.lp");
         // cplex.extract(model); 
 
 
@@ -322,7 +330,9 @@ std::pair<Solution, double> Model::Build_Model_with_LB(ProblemInstance* _p, vect
         }
 
 
-        v = IloNumVarArray(env, _p->num_forfeits_pairs, 0.0, 1.0, IloNumVar::Float);
+        // v = IloNumVarArray(env, _p->num_forfeits_pairs, 0.0, 1.0, IloNumVar::Float);
+        IloBoolVarArray v(env, _p->num_forfeits_pairs);         
+
 
         for (int k = 0; k < p->num_forfeits_pairs ; ++k){
             stringstream varv;
@@ -437,7 +447,9 @@ std::pair<Solution, int> Model::Build_Model(ProblemInstance* _p, vector<int> bes
         }
 
 
-        v = IloNumVarArray(env, _p->num_forfeits_pairs, 0.0, 1.0, IloNumVar::Float);
+        // v = IloNumVarArray(env, _p->num_forfeits_pairs, 0.0, 1.0, IloNumVar::Float);
+        IloBoolVarArray v(env, _p->num_forfeits_pairs); 
+
 
         for (int k = 0; k < p->num_forfeits_pairs ; ++k){
             stringstream varv;

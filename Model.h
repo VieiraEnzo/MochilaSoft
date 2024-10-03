@@ -24,16 +24,16 @@ class Model {
         IloCplex knapsack;
         IloCplex knapsack_lb;
         IloBoolVarArray x; 
-        IloNumVarArray v; 
+        IloBoolVarArray v; 
         IloBoolVarArray z; 
         time_t start, end;
         void addConstraintTotalCapacity(IloEnv &env,IloModel &model,IloBoolVarArray &x, ProblemInstance* _p);
-        void addConstraintLinearization(IloEnv &env,IloModel &model,IloBoolVarArray &x, IloNumVarArray &v, ProblemInstance* _p);
-        void addObjective(IloEnv &env, IloModel &model, IloBoolVarArray &x, IloNumVarArray &v, ProblemInstance* _p);
+        void addConstraintLinearization(IloEnv &env,IloModel &model,IloBoolVarArray &x, IloBoolVarArray &v, ProblemInstance* _p);
+        void addObjective(IloEnv &env, IloModel &model, IloBoolVarArray &x, IloBoolVarArray &v, ProblemInstance* _p);
         void addConstraintofChoosePattern(IloEnv &env, IloModel &model, IloBoolVarArray &z, int num_patterns); 
         void addConstraintofFixPattern(IloEnv &env, IloModel &model, IloBoolVarArray &x, IloBoolVarArray &z, const std::vector<std::vector<int>>& pattern_matrix, int num_patterns, ProblemInstance* _p); 
         void addConstraintLocalBranching(IloEnv &env,IloModel &model,IloBoolVarArray &x,std::vector<int> &solution, ProblemInstance* _p);
-        void addConstraintImprSol(IloEnv &env, IloModel &model, IloBoolVarArray &x, IloNumVarArray &v, ProblemInstance* _p, int best_value);
+        void addConstraintImprSol(IloEnv &env, IloModel &model, IloBoolVarArray &x, IloBoolVarArray &v, ProblemInstance* _p, int best_value);
     public:
         Model(ProblemInstance* _p);
         ~Model();

@@ -83,40 +83,52 @@ saída: -
 tempo: O(n * #itens removidos) ou O(#itens removidos)
 */
 
-void perturbate_2(
-  Solution &solution,
-  ProblemInstance* _p,
-  int iter,
-  int max_iter,
-  string &flight_step,
-  int current_cost,
-  int best_cost
-) {
+// void perturbate_2(
+//   Solution &solution,
+//   ProblemInstance* _p
+// ) {
 
-  mt19937 rng((uint32_t)chrono::steady_clock::now().time_since_epoch().count());
-  auto get_random = [&](int l, int r){
-    return uniform_int_distribution<int>(l, r)(rng);    
-  };
+//   mt19937 rng((uint32_t)chrono::steady_clock::now().time_since_epoch().count());
+//   auto get_random = [&](int l, int r){
+//     return uniform_int_distribution<int>(l, r)(rng);    
+//   };
 
-  int n = _p->num_items;
-  // int amnt_chg = max(1, (int)flight_step_value);
-  int amnt_chg = 5;
-  // cout << "change amount: " << amnt_chg << endl; 
-  for(int i = 0; i < amnt_chg; i++){
-    vector <int> can_rem;
-    for(int i = 0; i < n; i++){
-      if(solution.is_in_sack(i)){
-        can_rem.push_back(i);
-      }
-    }
-    if(can_rem.size() > 0){
-      int id = get_random(0, can_rem.size()-1);
-      id = can_rem[id];
-      solution.remove_itemO(id); //remover em O(1) ou O(n)?
-    }
-  }
+//   int n = _p->num_items;
   
-}
+//   // adding solutions
+//   vector <int> can_add;
+//   for(int i = 0; i < n; i++){
+//     if(!solution.is_in_sack(i)){ // let infeasibility
+//       can_add.push_back(i);
+//     }
+//   }
+//   int num_addable = 1; 
+//   for(int i = 0; i < num_addable; i++){
+//     if(can_add.size() > 0){
+//     int id = get_random(0, can_add.size()-1);
+//     id = can_add[id];
+//     // assert(solution.can_add(id));
+//     solution.add_itemO(id); //adicionar em O(1) ou O(n)?
+//   }
+//   }
+  
+//   // removing solutions
+//   int remaining_capacity = _p->budget - solution.used_capacity;
+//   cout << "remaining capacity: " << remaining_capacity << endl;  
+//   vector <int> can_rem;
+//   for(int i = 0; i < n; i++){
+//     if(solution.is_in_sack(i) && (remaining_capacity > 0)){
+//       can_rem.push_back(i);
+//       remaining_capacity -= _p->weights[i]; 
+//     }
+//   }
+//   if(can_rem.size() > 0){
+//     int id = get_random(0, can_rem.size()-1);
+//     id = can_rem[id];
+//     solution.remove_itemO(id); //remover em O(1) ou O(n)?
+//   }
+  
+// }
 
 void perturbate(
   Solution &solution,
@@ -129,8 +141,8 @@ void perturbate(
 ) {
   double flight_step_value;
   if(flight_step == "cauchy"){
-    // flight_step_value = abs(hybrid_cauchy_flight_step(iter, max_iter, current_cost, best_cost));
-    flight_step_value = abs(cauchy_flight_step(iter, max_iter));
+    flight_step_value = abs(hybrid_cauchy_flight_step(iter, max_iter, current_cost, best_cost));
+    // flight_step_value = abs(cauchy_flight_step(iter, max_iter));
   }else{
     cout << "Choose a valid flight step." << endl;
     assert(0);
@@ -143,8 +155,7 @@ void perturbate(
 
   int n = _p->num_items;
   int amnt_chg = max(1, (int)flight_step_value);
-  // int amnt_chg = 6;
-  // cout << "change amount: " << amnt_chg << endl; 
+  // int amnt_chg = 3;
   for(int i = 0; i < amnt_chg; i++){
     int type = get_random(0, 1);
     if(type == add){
@@ -253,7 +264,10 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
       iter++;
       string flight_step = "cauchy"; 
       perturbate(solution, _p, iter, iter_wo_impr, flight_step, current_cost, best_cost);
+      // cout << "cost after perturb: " << solution.getCost() << endl;
       localsearch.solve(_p, solution);
+      // cout << "cost after localsearch: " << solution.getCost() << endl;
+
 
       // if(solution.getCost() >  construct_cost){
       //   cout << "improved after perturb" << "at " <<  iter << ": " << solution.getCost() << endl; 
@@ -282,8 +296,26 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
         }
         cout << endl; 
 
-        // elite_set_solutions[] // pegar o último padrão que tem o melhor custo e colocar para resolver o modelo, depois que ele estagnar. 
+        // Model model_best(_p);
+        // Solution best_elite = elite_set_solutions.back();  // pegar o último padrão que tem o melhor custo e colocar para resolver o modelo, depois que ele estagnar. 
+        // vector <int> elite_elements;
+        // int qtd = 0;
+        // for(bool tmp : best_elite.inside){
+        //   if(tmp == 1){
+        //     elite_elements.push_back(qtd);
+        //   }
+        //   qtd += 1;
+        // }
+        // pair<Solution, int> elite_result = model_best.Build_Model_with_Patterns_2(_p, elite_elements, best_cost);
+        // cout << "cost found at elite results: " << elite_result.second << endl; 
+        // if(elite_result.second > best_cost){
+        //   best_sol = solution; 
+        //   best_cost = elite_result.second;
+        //   cout << "best solution found in elite schema: " << best_cost << endl; 
+        // }
 
+
+         
         no_change = 0;
         cout << "Cost before mining: " << solution.getCost() << endl; 
         const int suporte = min((int)(0.01*(double)_p->num_items), (int) (*EliteSet).getESsize());
@@ -348,36 +380,11 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
         best_cost = current_cost;
         iter = 0;
         cout << "best cost: " << best_cost << endl; 
-        stag = 0;  
-        EliteSet->add(best_sol); 
+        stag = 0;
       }else{
         stag++; 
       }
 
-
-      // if(stag > 500){
-      //   cout << "============> 500 iterations without finding best!" << endl; 
-      //   Model kpf_model(_p);
-      //   vector <int> elements;
-      //   int num = 0;
-      //   for(bool tmp : best_sol.inside){
-      //     if(tmp == 1){
-      //       elements.push_back(num);
-      //     }
-      //     num += 1;
-      //   }
-      //   pair<Solution, int> model_result = kpf_model.Build_Model(_p, elements);
-      //   solution = model_result.first;
-      //   current_cost = model_result.second;
-
-      //   if(current_cost > best_cost){
-      //     best_sol = solution; 
-      //     best_cost = current_cost;
-      //     iter = 0;
-      //     cout << "best cost found inside stag: " << best_cost << endl; 
-      //     stag = 0;  
-      //   }
-      // }
     }
   }
   solution = best_sol;
