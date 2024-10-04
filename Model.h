@@ -43,6 +43,8 @@ class Model {
         status getStatus();
         // std::tuple <std::vector<int>,int> solveLB(std::vector<int> &solution,int timebound,double upperbound);
         void setMIPstart(vector<int> &Solution, IloCplex &cplex, IloBoolVarArray &x, ProblemInstance* _p);
+        void setMIPstart2(vector<int> &Solution, IloModel &model, IloBoolVarArray &x, ProblemInstance* _p);
+
         // IloEnv getEnv(){return env;};
     
         

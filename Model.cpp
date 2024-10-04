@@ -24,6 +24,19 @@ vector<int> convertToBinaryVector(vector<int> &solution, ProblemInstance* _p) {
     return binaryVec;
 }
 
+void Model::setMIPstart2(vector<int> &solution, IloModel &model,  IloBoolVarArray &x, ProblemInstance* _p) {  	
+    vector<int> bin_solution = convertToBinaryVector(solution, _p); 
+
+    IloNumArray startValues(env, _p->num_items);
+    for (int i = 0; i < _p->num_items; ++i) {
+        if(bin_solution[i] == 1){
+            model.add(x[i] == 1); 
+        }else{
+            model.add(x[i] == 0); 
+        }
+    }
+}
+
 
 void Model::setMIPstart(vector<int> &solution, IloCplex &cplex, IloBoolVarArray &x, ProblemInstance* _p) {  	
     int solvalx[_p->num_items]; 
@@ -224,8 +237,8 @@ std::pair<Solution, int> Model::Build_Model_with_Patterns(ProblemInstance* _p, i
         knapsack.setParam(IloCplex::Param::TimeLimit,timelimit);
         knapsack.setOut(outfile);
         setMIPstart(best_solution, knapsack, x, _p); 
-        // knapsack.exportModel("KPFModel_patterns.lp");
-        // cplex.extract(model); 
+        // setMIPstart2(best_solution, model, x, _p); 
+        knapsack.exportModel("KPFModel_patterns.lp");
 
 
         // double objValue = knapsack.getObjValue();
