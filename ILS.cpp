@@ -234,6 +234,8 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
   best_sol = solution;
 
   std::unique_ptr<ES> EliteSet = std::make_unique<ES>(15);
+  std::unique_ptr<ES> EliteSet_best = std::make_unique<ES>(15);
+
 
   //Multstart
   vector<vector<int>> patterns_reused;
@@ -284,17 +286,17 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
       if(no_change == 15){
         
         // Elite Set solution cost
-        vector<Solution> elite_set_solutions;
-        elite_set_solutions.reserve(EliteSet->getConjSol().size()); // Reserve memory for efficiency
-        for (const auto& s : EliteSet->getConjSol()) {
-            elite_set_solutions.push_back(s); // Add each solution to the vector
-        }
+        // vector<Solution> elite_set_solutions;
+        // elite_set_solutions.reserve(EliteSet->getConjSol().size()); // Reserve memory for efficiency
+        // for (const auto& s : EliteSet->getConjSol()) {
+        //     elite_set_solutions.push_back(s); // Add each solution to the vector
+        // }
 
-        cout << "Elite set solutions cost: "; 
-        for(const auto& e_solution: elite_set_solutions){
-          cout << " " << e_solution.cost; 
-        }
-        cout << endl; 
+        // cout << "Elite set solutions cost: "; 
+        // for(const auto& e_solution: elite_set_solutions){
+        //   cout << " " << e_solution.cost; 
+        // }
+        // cout << endl; 
 
         // Model model_best(_p);
         // Solution best_elite = elite_set_solutions.back();  // pegar o último padrão que tem o melhor custo e colocar para resolver o modelo, depois que ele estagnar. 
@@ -317,7 +319,7 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
 
          
         no_change = 0;
-        cout << "Cost before mining: " << solution.getCost() << endl; 
+        // cout << "Cost before mining: " << solution.getCost() << endl; 
         const int suporte = min((int)(0.01*(double)_p->num_items), (int) (*EliteSet).getESsize());
         // auto start = std::chrono::high_resolution_clock::now();
         Mining miner(*EliteSet, suporte, 15);
@@ -362,7 +364,7 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
         solution = model_result.first;
         current_cost = model_result.second;
 
-        cout << "Cost after mining: " << current_cost << endl; 
+        // cout << "Cost after mining: " << current_cost << endl; 
 
         if(current_cost == 0){ 
             solution = best_sol;
@@ -380,9 +382,82 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
         best_cost = current_cost;
         iter = 0;
         cout << "best cost: " << best_cost << endl; 
+        EliteSet_best->add(best_sol); 
         stag = 0;
       }else{
         stag++; 
+      }
+
+      if(stag == 200){
+        vector<Solution> elite_set_solutions;
+        elite_set_solutions.reserve(EliteSet_best->getConjSol().size()); // Reserve memory for efficiency
+        for (const auto& s : EliteSet_best->getConjSol()) {
+            elite_set_solutions.push_back(s); // Add each solution to the vector
+        }
+
+        cout << "Elite set best solutions cost: "; 
+        for(const auto& e_solution: elite_set_solutions){
+          cout << " " << e_solution.cost; 
+        }
+        cout << endl; 
+        const int suporte = min((int)(0.01*(double)_p->num_items), (int) (*EliteSet_best).getESsize());
+        Mining miner(*EliteSet_best, suporte, 15);
+        miner.map_file();
+        miner.mine();
+        miner.unmapall_file();
+        Pattern **Mined_Patterns = miner.getlistOfPatterns();
+        // auto end = std::chrono::high_resolution_clock::now();
+        // std::chrono::duration<double> duration = end - start;
+        // total_duration += duration;
+
+        int pattern_size = miner.getSizePatterns();
+
+        int randPos = rand()%pattern_size;
+        Pattern *Mined_Itens_reused = Mined_Patterns[randPos];
+        patterns_reused.push_back(Mined_Itens_reused->elements); 
+
+        vector <vector<int>> pattern_matrix(_p->num_items, vector<int>(pattern_size));
+        // cout << "\n========== model called =========="<<endl; 
+        for(int i = 0; i < pattern_size; i++){
+          // cout << "pattern " << i << ": "; 
+          Pattern *Mined_Items = Mined_Patterns[i];
+          for(int tmp : Mined_Items->elements){
+            // cout << tmp << " "; 
+            pattern_matrix[tmp][i] = 1;
+          }
+          // cout << "\n";
+        }
+        // cout << "\n\n"; 
+
+        vector <int> elements;
+        int num = 0;
+        for(bool tmp : best_sol.inside){
+          if(tmp == 1){
+            elements.push_back(num);
+          }
+          num += 1;
+        }
+
+        Model kpf_model(_p);
+        pair<Solution, int> model_result = kpf_model.Build_Model_with_Patterns(_p, pattern_size, pattern_matrix, elements, best_cost);
+        solution = model_result.first;
+        current_cost = model_result.second;
+
+        cout << "Cost after mining of bests: " << current_cost << endl; 
+
+        if(current_cost == 0){ 
+            solution = best_sol;
+            current_cost = best_cost;
+        }
+
+        if(current_cost > best_cost){
+          cout << "solution improved at stag...\n"; 
+          best_sol = solution; 
+          best_cost = current_cost;
+        }
+      
+        // EliteSet_best.reset(nullptr);
+        // EliteSet_best = make_unique<ES>(15);
       }
 
     }
