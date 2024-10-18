@@ -73,62 +73,6 @@ enum choice{
   rem
 };
 
-/*
-perturba uma solução parcial (remove alguns itens e adiciona outros aleatoriamente)
-entrada:
-- solução parcial (que será modifica)
-- instância do problema
-- parâmetros da distribuição de cauchy
-saída: -
-tempo: O(n * #itens removidos) ou O(#itens removidos)
-*/
-
-// void perturbate_2(
-//   Solution &solution,
-//   ProblemInstance* _p
-// ) {
-
-//   mt19937 rng((uint32_t)chrono::steady_clock::now().time_since_epoch().count());
-//   auto get_random = [&](int l, int r){
-//     return uniform_int_distribution<int>(l, r)(rng);    
-//   };
-
-//   int n = _p->num_items;
-  
-//   // adding solutions
-//   vector <int> can_add;
-//   for(int i = 0; i < n; i++){
-//     if(!solution.is_in_sack(i)){ // let infeasibility
-//       can_add.push_back(i);
-//     }
-//   }
-//   int num_addable = 1; 
-//   for(int i = 0; i < num_addable; i++){
-//     if(can_add.size() > 0){
-//     int id = get_random(0, can_add.size()-1);
-//     id = can_add[id];
-//     // assert(solution.can_add(id));
-//     solution.add_itemO(id); //adicionar em O(1) ou O(n)?
-//   }
-//   }
-  
-//   // removing solutions
-//   int remaining_capacity = _p->budget - solution.used_capacity;
-//   cout << "remaining capacity: " << remaining_capacity << endl;  
-//   vector <int> can_rem;
-//   for(int i = 0; i < n; i++){
-//     if(solution.is_in_sack(i) && (remaining_capacity > 0)){
-//       can_rem.push_back(i);
-//       remaining_capacity -= _p->weights[i]; 
-//     }
-//   }
-//   if(can_rem.size() > 0){
-//     int id = get_random(0, can_rem.size()-1);
-//     id = can_rem[id];
-//     solution.remove_itemO(id); //remover em O(1) ou O(n)?
-//   }
-  
-// }
 
 void perturbate(
   Solution &solution,
@@ -139,14 +83,11 @@ void perturbate(
   int current_cost,
   int best_cost
 ) {
-  double flight_step_value;
-  if(flight_step == "cauchy"){
-    flight_step_value = abs(hybrid_cauchy_flight_step(iter, max_iter, current_cost, best_cost));
-    // flight_step_value = abs(cauchy_flight_step(iter, max_iter));
-  }else{
-    cout << "Choose a valid flight step." << endl;
-    assert(0);
-  }
+  double alpha = 10; // max perturbation size
+  double beta = 1;   // min perturbation size
+  double progress = (double)iter / (double)max_iter;
+  int perturbation_size = (int)(alpha * (1 - progress) + beta);
+
 
   mt19937 rng((uint32_t)chrono::steady_clock::now().time_since_epoch().count());
   auto get_random = [&](int l, int r){
@@ -154,8 +95,8 @@ void perturbate(
   };
 
   int n = _p->num_items;
-  int amnt_chg = max(1, (int)flight_step_value);
-  // int amnt_chg = 3;
+  int amnt_chg = max(1, (int)perturbation_size);
+  // cout << "amount change: " << amnt_chg << endl; 
   for(int i = 0; i < amnt_chg; i++){
     int type = get_random(0, 1);
     if(type == add){
@@ -186,6 +127,63 @@ void perturbate(
     }
   }
 }
+
+// void perturbate(
+//   Solution &solution,
+//   ProblemInstance* _p,
+//   int iter,
+//   int max_iter,
+//   string &flight_step,
+//   int current_cost,
+//   int best_cost
+// ) {
+//   double flight_step_value;
+//   if(flight_step == "cauchy"){
+//     flight_step_value = abs(hybrid_cauchy_flight_step(iter, max_iter, current_cost, best_cost));
+//     // flight_step_value = abs(cauchy_flight_step(iter, max_iter));
+//   }else{
+//     cout << "Choose a valid flight step." << endl;
+//     assert(0);
+//   }
+
+//   mt19937 rng((uint32_t)chrono::steady_clock::now().time_since_epoch().count());
+//   auto get_random = [&](int l, int r){
+//     return uniform_int_distribution<int>(l, r)(rng);    
+//   };
+
+//   int n = _p->num_items;
+//   int amnt_chg = max(1, (int)flight_step_value);
+//   // int amnt_chg = 3;
+//   for(int i = 0; i < amnt_chg; i++){
+//     int type = get_random(0, 1);
+//     if(type == add){
+//       vector <int> can_add;
+//       for(int i = 0; i < n; i++){
+//         if(solution.can_add(i)){
+//           can_add.push_back(i);
+//         }
+//       }
+//       if(can_add.size() > 0){
+//         int id = get_random(0, can_add.size()-1);
+//         id = can_add[id];
+//         assert(solution.can_add(id));
+//         solution.add_itemO(id); //adicionar em O(1) ou O(n)?
+//       }
+//     }else if(type == rem){
+//       vector <int> can_rem;
+//       for(int i = 0; i < n; i++){
+//         if(solution.is_in_sack(i)){
+//           can_rem.push_back(i);
+//         }
+//       }
+//       if(can_rem.size() > 0){
+//         int id = get_random(0, can_rem.size()-1);
+//         id = can_rem[id];
+//         solution.remove_itemO(id); //remover em O(1) ou O(n)?
+//       }
+//     }
+//   }
+// }
 
 
 void getRandomVector(Solution &solution, vector<vector<int>>& vec) {
@@ -234,8 +232,6 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
   best_sol = solution;
 
   std::unique_ptr<ES> EliteSet = std::make_unique<ES>(15);
-  std::unique_ptr<ES> EliteSet_best = std::make_unique<ES>(15);
-
 
   //Multstart
   vector<vector<int>> patterns_reused;
@@ -282,7 +278,7 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
         // cout << "Added Solution Cost: " << solution.getCost() << endl; 
       }
 
-      assert(no_change <= 15);
+      // assert(no_change <= 15);
       if(no_change == 15){
         
         // Elite Set solution cost
@@ -382,82 +378,9 @@ int ILS::solve(ProblemInstance* _p, Solution &solution, ConstructiveCG &construc
         best_cost = current_cost;
         iter = 0;
         cout << "best cost: " << best_cost << endl; 
-        EliteSet_best->add(best_sol); 
         stag = 0;
       }else{
         stag++; 
-      }
-
-      if(stag == 200){
-        vector<Solution> elite_set_solutions;
-        elite_set_solutions.reserve(EliteSet_best->getConjSol().size()); // Reserve memory for efficiency
-        for (const auto& s : EliteSet_best->getConjSol()) {
-            elite_set_solutions.push_back(s); // Add each solution to the vector
-        }
-
-        cout << "Elite set best solutions cost: "; 
-        for(const auto& e_solution: elite_set_solutions){
-          cout << " " << e_solution.cost; 
-        }
-        cout << endl; 
-        const int suporte = min((int)(0.01*(double)_p->num_items), (int) (*EliteSet_best).getESsize());
-        Mining miner(*EliteSet_best, suporte, 15);
-        miner.map_file();
-        miner.mine();
-        miner.unmapall_file();
-        Pattern **Mined_Patterns = miner.getlistOfPatterns();
-        // auto end = std::chrono::high_resolution_clock::now();
-        // std::chrono::duration<double> duration = end - start;
-        // total_duration += duration;
-
-        int pattern_size = miner.getSizePatterns();
-
-        int randPos = rand()%pattern_size;
-        Pattern *Mined_Itens_reused = Mined_Patterns[randPos];
-        patterns_reused.push_back(Mined_Itens_reused->elements); 
-
-        vector <vector<int>> pattern_matrix(_p->num_items, vector<int>(pattern_size));
-        // cout << "\n========== model called =========="<<endl; 
-        for(int i = 0; i < pattern_size; i++){
-          // cout << "pattern " << i << ": "; 
-          Pattern *Mined_Items = Mined_Patterns[i];
-          for(int tmp : Mined_Items->elements){
-            // cout << tmp << " "; 
-            pattern_matrix[tmp][i] = 1;
-          }
-          // cout << "\n";
-        }
-        // cout << "\n\n"; 
-
-        vector <int> elements;
-        int num = 0;
-        for(bool tmp : best_sol.inside){
-          if(tmp == 1){
-            elements.push_back(num);
-          }
-          num += 1;
-        }
-
-        Model kpf_model(_p);
-        pair<Solution, int> model_result = kpf_model.Build_Model_with_Patterns(_p, pattern_size, pattern_matrix, elements, best_cost);
-        solution = model_result.first;
-        current_cost = model_result.second;
-
-        cout << "Cost after mining of bests: " << current_cost << endl; 
-
-        if(current_cost == 0){ 
-            solution = best_sol;
-            current_cost = best_cost;
-        }
-
-        if(current_cost > best_cost){
-          cout << "solution improved at stag...\n"; 
-          best_sol = solution; 
-          best_cost = current_cost;
-        }
-      
-        // EliteSet_best.reset(nullptr);
-        // EliteSet_best = make_unique<ES>(15);
       }
 
     }

@@ -1,88 +1,421 @@
 Executing 0 for test_instance/kpf_2_sum.txt...
 ========>>> Cost after construction: 3255
-best cost: 3260
-best cost: 3261
-best cost: 3269
+best cost: 3262
+best cost: 3268
+best cost: 3271
 best cost: 3273
-best cost: 3274
-best cost: 3277
-best cost: 3282
-best cost: 3286
-best cost: 3289
+best cost: 3288
 best cost: 3296
-best cost: 3299
-best cost: 3302
-best cost: 3303
-best cost: 3306
-best cost: 3309
-best cost: 3310
-best cost: 3318
-best cost: 3321
-best cost: 3323
-best cost: 3324
+best cost: 3297
+best cost: 3314
+best cost: 3317
+best cost: 3320
 best cost: 3325
 best cost: 3327
 best cost: 3328
-best cost: 3334
+best cost: 3331
+best cost: 3335
+best cost: 3341
+best cost: 3345
+best cost: 3346
+best cost: 3347
+best cost: 3351
+best cost: 3353
+best cost: 3357
+best cost: 3358
+best cost: 3362
+========>>> Cost after construction: 3220
+best cost: 3363
+best cost: 3364
+best cost: 3365
+========>>> Cost after construction: 3294
+best cost: 3366
+best cost: 3367
+best cost: 3368
+best cost: 3369
+========>>> Cost after construction: 3267
+========>>> Cost after construction: 3341
+========>>> Cost after construction: 3272
+========>>> Cost after construction: 3254
+best cost before LB: 3369
+Executing 1 for test_instance/kpf_2_sum.txt...
+========>>> Cost after construction: 3255
+best cost: 3260
+best cost: 3262
+best cost: 3264
+best cost: 3269
+best cost: 3273
+best cost: 3276
+best cost: 3282
+best cost: 3290
+best cost: 3295
+best cost: 3304
+best cost: 3305
+best cost: 3306
+best cost: 3314
+best cost: 3320
+best cost: 3321
+best cost: 3322
+best cost: 3324
+best cost: 3325
+best cost: 3328
+best cost: 3329
+best cost: 3330
+best cost: 3331
+best cost: 3336
+best cost: 3344
+best cost: 3348
+best cost: 3350
+best cost: 3351
+best cost: 3352
+best cost: 3353
+best cost: 3356
+best cost: 3357
+best cost: 3358
+best cost: 3360
+best cost: 3364
+best cost: 3366
+best cost: 3367
+best cost: 3368
+========>>> Cost after construction: 3281
+========>>> Cost after construction: 3325
+========>>> Cost after construction: 3317
+========>>> Cost after construction: 3200
+best cost: 3372
+best cost: 3373
+========>>> Cost after construction: 3225
+best cost: 3374
+best cost: 3375
+best cost: 3379
+best cost: 3380
+========>>> Cost after construction: 3221
+best cost before LB: 3380
+Executing 2 for test_instance/kpf_2_sum.txt...
+========>>> Cost after construction: 3255
+best cost: 3264
+best cost: 3269
+best cost: 3276
+best cost: 3277
+best cost: 3288
+best cost: 3300
+best cost: 3303
+best cost: 3308
+best cost: 3313
+best cost: 3315
+best cost: 3327
+best cost: 3330
 best cost: 3335
 best cost: 3336
 best cost: 3337
-best cost: 3343
-best cost: 3344
-best cost: 3348
+best cost: 3347
 best cost: 3349
-best cost: 3354
-best cost: 3355
-Elite set best solutions cost:  3323 3324 3325 3327 3328 3334 3335 3336 3337 3343 3344 3348 3349 3354 3355
-Cost after mining of bests: 3356
-solution improved at stag...
-best cost: 3358
-Elite set best solutions cost:  3324 3325 3327 3328 3334 3335 3336 3337 3343 3344 3348 3349 3354 3355 3358
-Cost after mining of bests: 3358
-========>>> Cost after construction: 3272
-Elite set best solutions cost:  3324 3325 3327 3328 3334 3335 3336 3337 3343 3344 3348 3349 3354 3355 3358
-Cost after mining of bests: 3358
+best cost: 3350
+best cost: 3351
+best cost: 3353
+best cost: 3356
 best cost: 3359
+best cost: 3362
+best cost: 3365
+best cost: 3366
+========>>> Cost after construction: 3253
+========>>> Cost after construction: 3200
+========>>> Cost after construction: 3253
+========>>> Cost after construction: 3244
+========>>> Cost after construction: 3279
+best cost: 3377
+best cost: 3381
+best cost: 3382
+best cost: 3384
+best cost: 3387
+best cost: 3388
+best cost: 3391
+best cost: 3395
+best cost: 3398
+best cost: 3401
+best cost: 3403
+best cost: 3406
+best cost: 3410
+best cost: 3414
+best cost: 3415
+========>>> Cost after construction: 3239
+best cost before LB: 3415
+Executing 3 for test_instance/kpf_2_sum.txt...
+========>>> Cost after construction: 3255
+best cost: 3262
+best cost: 3267
+best cost: 3274
+best cost: 3279
+best cost: 3283
+best cost: 3295
+best cost: 3297
+best cost: 3300
+best cost: 3304
+best cost: 3312
+best cost: 3314
+best cost: 3316
+best cost: 3317
+best cost: 3322
+best cost: 3327
+best cost: 3330
+best cost: 3340
+best cost: 3344
+best cost: 3355
+best cost: 3356
+best cost: 3362
+best cost: 3364
+========>>> Cost after construction: 3240
+best cost: 3365
+best cost: 3366
+best cost: 3368
+========>>> Cost after construction: 3272
+========>>> Cost after construction: 3246
+========>>> Cost after construction: 3236
+best cost: 3378
+========>>> Cost after construction: 3279
+========>>> Cost after construction: 3273
+best cost before LB: 3378
+Executing 4 for test_instance/kpf_2_sum.txt...
+========>>> Cost after construction: 3255
+best cost: 3261
+best cost: 3270
+best cost: 3284
+best cost: 3295
+best cost: 3301
+best cost: 3305
+best cost: 3306
+best cost: 3307
+best cost: 3315
+best cost: 3317
+best cost: 3322
+best cost: 3324
+best cost: 3329
+best cost: 3331
+best cost: 3335
+best cost: 3336
+best cost: 3337
+best cost: 3350
+best cost: 3352
+best cost: 3355
+best cost: 3356
+best cost: 3358
 best cost: 3360
 best cost: 3361
-Elite set best solutions cost:  3328 3334 3335 3336 3337 3343 3344 3348 3349 3354 3355 3358 3359 3360 3361
-Cost after mining of bests: 3361
-best cost: 3362
-Elite set best solutions cost:  3334 3335 3336 3337 3343 3344 3348 3349 3354 3355 3358 3359 3360 3361 3362
-Cost after mining of bests: 3362
-best cost: 3363
-best cost: 3367
-best cost: 3371
-Elite set best solutions cost:  3336 3337 3343 3344 3348 3349 3354 3355 3358 3359 3360 3361 3362 0 3371
-Cost after mining of bests: 0
-best cost: 3372
-Elite set best solutions cost:  3337 3343 3344 3348 3349 3354 3355 3358 3359 3360 3361 3362 0 3371 3372
-Cost after mining of bests: 0
+best cost: 3364
+best cost: 3365
+========>>> Cost after construction: 3268
 best cost: 3373
-Elite set best solutions cost:  3343 3344 3348 3349 3354 3355 3358 3359 3360 3361 3362 0 3371 3372 3373
-Cost after mining of bests: 0
-========>>> Cost after construction: 3340
-Elite set best solutions cost:  3343 3344 3348 3349 3354 3355 3358 3359 3360 3361 3362 0 3371 3372 3373
-Cost after mining of bests: 0
-========>>> Cost after construction: 3325
-Elite set best solutions cost:  3343 3344 3348 3349 3354 3355 3358 3359 3360 3361 3362 0 3371 3372 3373
-Cost after mining of bests: 0
-========>>> Cost after construction: 3319
-Elite set best solutions cost:  3343 3344 3348 3349 3354 3355 3358 3359 3360 3361 3362 0 3371 3372 3373
-Cost after mining of bests: 0
-best cost: 3375
-best cost: 3377
 best cost: 3380
-Elite set best solutions cost:  3349 3354 3355 3358 3359 3360 3361 3362 0 3368 3371 3372 3373 3375 3377
-Cost after mining of bests: 0
-========>>> Cost after construction: 3305
-Elite set best solutions cost:  3349 3354 3355 3358 3359 3360 3361 3362 0 3368 3371 3372 3373 3375 3377
-Cost after mining of bests: 0
-best cost: 3381
-Elite set best solutions cost:  3354 3355 3358 3359 3360 3361 3362 0 3368 3371 3372 3373 3375 3377 3381
-Cost after mining of bests: 0
-========>>> Cost after construction: 3299
-Elite set best solutions cost:  3354 3355 3358 3359 3360 3361 3362 0 3368 3371 3372 3373 3375 3377 3381
-Cost after mining of bests: 0
-best cost before LB: 3381
+best cost: 3384
+best cost: 3386
+best cost: 3388
+best cost: 3389
+best cost: 3393
+best cost: 3394
+best cost: 3398
+best cost: 3401
+========>>> Cost after construction: 3245
+========>>> Cost after construction: 3382
+best cost: 3402
+========>>> Cost after construction: 3247
+best cost: 3410
+========>>> Cost after construction: 3347
+========>>> Cost after construction: 3254
+best cost before LB: 3410
+Executing 5 for test_instance/kpf_2_sum.txt...
+========>>> Cost after construction: 3255
+best cost: 3273
+best cost: 3280
+best cost: 3290
+best cost: 3293
+best cost: 3294
+best cost: 3298
+best cost: 3300
+best cost: 3309
+best cost: 3312
+best cost: 3314
+best cost: 3315
+best cost: 3316
+best cost: 3325
+best cost: 3329
+best cost: 3331
+best cost: 3333
+best cost: 3339
+best cost: 3340
+========>>> Cost after construction: 3310
+best cost: 3344
+========>>> Cost after construction: 3288
+========>>> Cost after construction: 3264
+========>>> Cost after construction: 3304
+========>>> Cost after construction: 3210
+========>>> Cost after construction: 3259
+best cost before LB: 3344
+Executing 6 for test_instance/kpf_2_sum.txt...
+========>>> Cost after construction: 3255
+best cost: 3256
+best cost: 3257
+best cost: 3283
+best cost: 3292
+best cost: 3301
+best cost: 3305
+best cost: 3312
+best cost: 3320
+best cost: 3321
+best cost: 3322
+best cost: 3324
+best cost: 3329
+best cost: 3330
+best cost: 3332
+best cost: 3333
+best cost: 3335
+best cost: 3338
+best cost: 3341
+best cost: 3344
+best cost: 3346
+best cost: 3350
+best cost: 3351
+best cost: 3352
+best cost: 3353
+best cost: 3356
+best cost: 3358
+best cost: 3359
+best cost: 3361
+best cost: 3362
+========>>> Cost after construction: 3238
+best cost: 3364
+========>>> Cost after construction: 3228
+best cost: 3365
+best cost: 3366
+========>>> Cost after construction: 3238
+========>>> Cost after construction: 3333
+best cost: 3367
+========>>> Cost after construction: 3288
+========>>> Cost after construction: 3227
+best cost before LB: 3367
+Executing 7 for test_instance/kpf_2_sum.txt...
+========>>> Cost after construction: 3255
+best cost: 3258
+best cost: 3264
+best cost: 3265
+best cost: 3281
+best cost: 3282
+best cost: 3283
+best cost: 3288
+best cost: 3294
+best cost: 3303
+best cost: 3305
+best cost: 3306
+best cost: 3316
+best cost: 3326
+best cost: 3331
+best cost: 3339
+best cost: 3350
+best cost: 3351
+best cost: 3354
+best cost: 3355
+best cost: 3360
+========>>> Cost after construction: 3268
+best cost: 3361
+best cost: 3362
+best cost: 3364
+best cost: 3365
+best cost: 3368
+best cost: 3373
+best cost: 3374
+best cost: 3375
+========>>> Cost after construction: 3256
+best cost: 3379
+best cost: 3391
+best cost: 3394
+best cost: 3402
+best cost: 3405
+best cost: 3406
+========>>> Cost after construction: 3322
+best cost: 3407
+========>>> Cost after construction: 3344
+best cost: 3408
+best cost: 3409
+best cost: 3412
+best cost: 3415
+========>>> Cost after construction: 3247
+========>>> Cost after construction: 3266
+best cost before LB: 3415
+Executing 8 for test_instance/kpf_2_sum.txt...
+========>>> Cost after construction: 3255
+best cost: 3262
+best cost: 3275
+best cost: 3288
+best cost: 3289
+best cost: 3296
+best cost: 3298
+best cost: 3299
+best cost: 3300
+best cost: 3303
+best cost: 3304
+best cost: 3319
+best cost: 3322
+best cost: 3323
+best cost: 3325
+best cost: 3332
+best cost: 3334
+best cost: 3341
+best cost: 3343
+best cost: 3352
+best cost: 3357
+========>>> Cost after construction: 3201
+best cost: 3362
+========>>> Cost after construction: 3256
+========>>> Cost after construction: 3272
+best cost: 3367
+best cost: 3369
+========>>> Cost after construction: 3278
+best cost: 3376
+========>>> Cost after construction: 3362
+========>>> Cost after construction: 3325
+best cost before LB: 3376
+Executing 9 for test_instance/kpf_2_sum.txt...
+========>>> Cost after construction: 3255
+best cost: 3258
+best cost: 3270
+best cost: 3273
+best cost: 3276
+best cost: 3278
+best cost: 3297
+best cost: 3314
+best cost: 3318
+best cost: 3324
+best cost: 3326
+best cost: 3328
+best cost: 3337
+best cost: 3344
+========>>> Cost after construction: 3282
+best cost: 3348
+best cost: 3350
+best cost: 3352
+best cost: 3353
+best cost: 3354
+best cost: 3357
+best cost: 3358
+best cost: 3359
+best cost: 3360
+best cost: 3362
+========>>> Cost after construction: 3327
+best cost: 3363
+========>>> Cost after construction: 3270
+========>>> Cost after construction: 3272
+========>>> Cost after construction: 3225
+========>>> Cost after construction: 3276
+best cost: 3367
+best cost: 3368
+best cost: 3371
+best cost: 3372
+best cost: 3373
+best cost: 3376
+best cost: 3378
+best cost: 3388
+best cost: 3390
+best cost: 3392
+best cost: 3400
+best cost: 3401
+best cost: 3402
+best cost before LB: 3402
 Data successfully written to the file.
